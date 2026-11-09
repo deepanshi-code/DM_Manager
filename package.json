@@ -1,0 +1,12 @@
+{
+  "name": "dm-manager",
+  "private": true,
+  "workspaces": ["server", "client"],
+  "scripts": {
+    "dev:server": "npm run dev -w server",
+    "dev:client": "npm run dev -w client",
+    "simulate": "npm run simulate -w server --",
+    "generate-data": "npm run generate-data -w server",
+    "test": "npm test -w server"
+  }
+}
