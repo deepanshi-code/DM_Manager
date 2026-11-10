@@ -9,6 +9,14 @@ python ml/train.py                # train + evaluate + export the model to the s
 python ml/train.py --real ml/data/real/labelled.csv   # once you have real labels
 ```
 
+Tools for real data (full workflow: [data/real/README.md](data/real/README.md)):
+```bash
+python ml/anonymize.py raw.csv -o ml/data/real/anonymised.csv        # strip phone/email/UPI/handles/order IDs/names
+python ml/agreement.py sheet ml/data/real/anonymised.csv -n 50 -o ml/data/real/sheet.csv
+python ml/agreement.py score ml/data/real/sheet.csv                   # % agreement + Cohen's kappa
+python -m unittest discover -s ml/tests                               # 9 tests for these tools
+```
+
 `train.py` writes:
 - `server/src/classifier/model.json`: the model the Node server runs (no Python at runtime)
 - `server/test/fixtures/classifier_parity.json`: lets the JS tests check that Node gives the same probabilities as Python

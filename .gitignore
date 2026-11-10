@@ -4,4 +4,5 @@ dist/
 .env
 __pycache__/
 *.pyc
-ml/data/real/*.csv
+ml/data/real/*
+!ml/data/real/README.md
