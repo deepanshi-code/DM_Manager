@@ -15,6 +15,23 @@ export function clock(date) {
   return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
+export const INTENT_LABEL = {
+  price: 'Price',
+  size: 'Size',
+  availability: 'Availability',
+  cod_shipping: 'COD / shipping',
+  order_status: 'Order status',
+  return_exchange: 'Return / exchange',
+  complaint: 'Complaint',
+  collab: 'Collab',
+  spam: 'Likely spam',
+  greeting: 'Greeting',
+  follow_up: 'Follow-up',
+  unclassified: 'Unclassified',
+};
+
+export const intentLabel = (intent) => INTENT_LABEL[intent ?? 'unclassified'] ?? intent;
+
 export const STATUS_LABEL = {
   NEW: 'New',
   OPEN: 'Open',

@@ -14,6 +14,7 @@ export default function App() {
   const [agent, setAgent] = useState('');
   const [filter, setFilter] = useState('NEEDS_REPLY'); // default view = what needs action
   const [search, setSearch] = useState('');
+  const [intent, setIntent] = useState('');
   const [list, setList] = useState([]);
   const [stats, setStats] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
@@ -31,7 +32,7 @@ export default function App() {
   const refresh = useCallback(async () => {
     try {
       const [l, s, d] = await Promise.all([
-        api.list({ filter, q: search }),
+        api.list({ filter, q: search, intent }),
         api.stats(),
         selectedId ? api.get(selectedId) : Promise.resolve(null),
       ]);
@@ -43,7 +44,7 @@ export default function App() {
     } catch (e) {
       setError(`${e.message}. Is the server running?`);
     }
-  }, [filter, search, selectedId]);
+  }, [filter, search, intent, selectedId]);
 
   useEffect(() => {
     refresh();
@@ -93,6 +94,10 @@ export default function App() {
           filter={filter}
           search={search}
           onSearch={setSearch}
+          intent={intent}
+          onIntent={setIntent}
+          intents={meta?.intents ?? []}
+          intentCounts={filter === 'NEEDS_REPLY' ? stats?.needsReplyByIntent : null}
           selectedId={selectedId}
           onSelect={open}
           now={now}
@@ -100,7 +105,9 @@ export default function App() {
         <ConversationView
           conversation={detail}
           agents={meta?.agents ?? []}
+          intents={meta?.intents ?? []}
           now={now}
+          onCorrectIntent={act((messageId, value) => api.correctIntent(messageId, value, agent))}
           onReply={act((text) => api.reply(selectedId, text, agent))}
           onStatus={act((status) => api.setStatus(selectedId, status, agent))}
           onAssign={act((assignee) => api.assign(selectedId, assignee))}

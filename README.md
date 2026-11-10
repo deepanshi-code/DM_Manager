@@ -4,7 +4,9 @@
 
 **Phase 1 goal.** Make sure *no conversation can be forgotten*. Every chat has a lifecycle status and a reply timer, and the inbox always shows the customer who has waited longest first.
 
-> Capstone, Phase 1 of 4. Message classification (Phase 2), reply assistance (Phase 3) and the live Instagram connection (Phase 4) build on this foundation.
+**Phase 2 goal.** Sort every DM by type (price, size, COD, order status, complaint, spam…), so complaints and customers chasing a reply rise to the top, and agents can filter the inbox.
+
+> Capstone, Phases 1–2 of 4 done. Reply assistance (Phase 3) and the live Instagram connection (Phase 4) come next.
 
 ---
 
@@ -18,8 +20,12 @@ cp server/.env.example server/.env
 npm run dev:server               # API on http://localhost:4000
 npm run dev:client               # dashboard on http://localhost:5173  (second terminal)
 npm run simulate                 # replay synthetic DMs (third terminal)
-npm test                         # 15 automated tests
+npm test                         # 29 automated tests
 ```
+
+The classifier model is already included (`server/src/classifier/model.json`). To retrain it you need Python 3.11+: see [ml/README.md](ml/README.md).
+
+> If the server fails with `PGlite failed to initialize properly`, the local demo database in `server/.data/` is damaged (this happens if it's copied while the server is running). Stop the server, move or delete `server/.data/`, and start again; a fresh one is created.
 
 Useful simulator options:
 
@@ -83,6 +89,25 @@ client/src/                 React dashboard
 
 9. **Every status change is logged** in `status_events`, which supports auditing and later analysis.
 
+## Phase 2: message types and priority
+
+```
+DM ─▶ classify(text) ─────────────▶ messages.intent (+ confidence, source)
+        │  model if confident            │
+        │  else keyword rule             ▼
+        │  else model guess, flagged   conversation topic + "customer is chasing" ─▶ priority
+        ▼                                                                             URGENT / NORMAL / LOW
+   trained in Python (ml/), runs in Node from model.json
+```
+
+10. **The model is trained in Python and runs in Node.** scikit-learn trains it. The result is just numbers (vocabulary, idf, coefficients), and `server/src/classifier/index.js` does the same arithmetic. A **parity test** fails if the JS and Python probabilities differ by more than 0.0001, so the two can't silently drift apart.
+11. **Context rules handle what text can't.** "hi" and "hello??" mean different things when the customer has already waited 2 hours. A greeting or follow-up arriving while an earlier message is unanswered marks the customer as **chasing**, which makes the chat URGENT. A follow-up never replaces the conversation topic ("??" after "price?" is still a price chat). An unanswered complaint stays the topic.
+12. **Priority orders the inbox without hiding anything.** The order is overdue first, then URGENT > NORMAL > LOW, then longest-waiting. A NORMAL chat that waits too long becomes overdue and jumps above everything non-overdue. Likely-spam chats are still flagged overdue and counted, but they don't jump the queue. A real customer the model mistook for spam can still be found in the Overdue view.
+13. **Human corrections are stored next to the prediction, never over it.** Agents can fix any label from the message bubble. The correction wins immediately, model errors stay measurable (`/api/stats` → `labels`), and corrected rows export as real training data (`/api/labels.csv?corrected=1`).
+14. **Older messages are labelled at startup.** Messages stored before the classifier existed are classified once, so a Phase 1 database upgrades in place (the schema uses `ADD COLUMN IF NOT EXISTS`).
+
+**Evaluation (synthetic data, details and caveats in [ml/reports/phase2_evaluation.md](ml/reports/phase2_evaluation.md)):** the server's decision policy reaches 76% accuracy and 74% macro-F1 on held-out phrasings. However, complaint recall is only 22%, and the keyword rules it uses are leaked. Real, anonymised data is needed for a trustworthy number. See [ml/README.md](ml/README.md).
+
 ## Metrics the dashboard already measures
 - Conversations needing a reply, overdue conversations, and how long the oldest one has waited
 - Median reply time (per customer message turn)
@@ -105,6 +130,7 @@ These are your **evaluation metrics**. Measure them for a business before and af
 | Phase | Scope |
 |---|---|
 | 1 ✅ | Inbox, lifecycle, overdue detection, simulator, metrics |
-| 2 | Intent classification (price / size / COD / order status / complaint / collab / spam…): keyword baseline vs. TF-IDF + logistic regression vs. small transformer, with error analysis |
+| 2 ✅ | Intent classification: keyword baseline vs. TF-IDF + logistic regression (template-grouped CV, error analysis), priority and "chasing" rules, agent corrections → real training data |
+| 2b | Retrain and evaluate on real anonymised messages; try multilingual sentence embeddings (small transformer) |
 | 3 | FAQ templates, suggested replies, priority ranking, overdue notifications |
 | 4 | Real Instagram integration (Meta developer app, webhooks, Send API, App Review), pilot with one business, before/after measurement |

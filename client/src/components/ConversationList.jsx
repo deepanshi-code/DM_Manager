@@ -1,20 +1,33 @@
-import { since, STATUS_LABEL } from '../format.js';
+import { intentLabel, since, STATUS_LABEL } from '../format.js';
 
 const EMPTY = {
   NEEDS_REPLY: 'Inbox zero: every customer has a reply.',
   OVERDUE: 'Nothing overdue.',
 };
 
-export default function ConversationList({ items, filter, search, onSearch, selectedId, onSelect, now }) {
+export default function ConversationList({
+  items, filter, search, onSearch, intent, onIntent, intents, intentCounts, selectedId, onSelect, now,
+}) {
+  const options = [...intents, 'unclassified'];
   return (
     <section className="list" aria-label="Conversations">
-      <input
-        className="search"
-        type="search"
-        placeholder="Search name or message…"
-        value={search}
-        onChange={(e) => onSearch(e.target.value)}
-      />
+      <div className="list-tools">
+        <input
+          className="search"
+          type="search"
+          placeholder="Search name or message…"
+          value={search}
+          onChange={(e) => onSearch(e.target.value)}
+        />
+        <select aria-label="Filter by message type" value={intent} onChange={(e) => onIntent(e.target.value)}>
+          <option value="">All types</option>
+          {options.map((i) => (
+            <option key={i} value={i}>
+              {intentLabel(i)}{intentCounts?.[i] ? ` (${intentCounts[i]})` : ''}
+            </option>
+          ))}
+        </select>
+      </div>
       {items.length === 0 && <p className="empty">{EMPTY[filter] ?? 'No conversations here.'}</p>}
       <ul>
         {items.map((c) => (
@@ -29,6 +42,10 @@ export default function ConversationList({ items, filter, search, onSearch, sele
               </div>
               <div className="preview">{c.last_message_preview}</div>
               <div className="row-tags">
+                {c.priority === 'URGENT' && (
+                  <span className="chip urgent">{c.customer_chasing && c.intent !== 'complaint' ? 'Chasing' : 'Urgent'}</span>
+                )}
+                <span className={`chip intent intent-${c.intent ?? 'unclassified'}`}>{intentLabel(c.intent)}</span>
                 <span className={`chip status-${c.status}`}>{STATUS_LABEL[c.status]}</span>
                 {c.is_overdue ? (
                   <span className="chip danger">Overdue · waiting {since(c.needs_reply_since, now)}</span>

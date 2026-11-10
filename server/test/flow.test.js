@@ -158,3 +158,83 @@ test('webhook signature check', () => {
   assert.ok(!verifySignature(body, undefined, 's3cret'));
   assert.ok(!verifySignature(body, 'sha256=abc', 's3cret'));
 });
+
+// ---------- Phase 2: intents, priority, corrections ----------
+import { correctIntent, exportLabelsCsv, backfillIntents } from '../src/services/conversations.js';
+import { getDb } from '../src/db.js';
+
+test('incoming messages are labelled and a complaint makes the chat urgent', async () => {
+  const { conversationId, intent } = await ingestInbound({
+    igUserId: uid(), mid: mid(), text: 'received a damaged kurta, very disappointed',
+  });
+  assert.equal(intent, 'complaint');
+  const conv = await getConversation(conversationId);
+  assert.equal(conv.intent, 'complaint');
+  assert.equal(conv.priority, 'URGENT');
+  assert.equal(conv.messages[0].intent, 'complaint');
+  assert.ok(['model', 'rules'].includes(conv.messages[0].intent_source));
+});
+
+test('a nudge keeps the topic, marks the customer as chasing, and a reply clears it', async () => {
+  const igUserId = uid();
+  const { conversationId } = await ingestInbound({ igUserId, mid: mid(), text: 'price?', timestamp: Date.now() - 5000 });
+  let conv = await getConversation(conversationId);
+  assert.equal(conv.intent, 'price');
+  assert.equal(conv.priority, 'NORMAL');
+
+  await ingestInbound({ igUserId, mid: mid(), text: 'hello??' });
+  conv = await getConversation(conversationId);
+  assert.equal(conv.intent, 'price', 'follow-up does not replace the topic');
+  assert.equal(conv.customer_chasing, true);
+  assert.equal(conv.priority, 'URGENT');
+
+  await sendReply(conversationId, '₹899', 'Asha');
+  conv = await getConversation(conversationId);
+  assert.equal(conv.customer_chasing, false);
+  assert.equal(conv.priority, 'NORMAL');
+});
+
+test('urgent chats are listed before normal ones that waited longer (when neither is overdue)', async () => {
+  const normal = await ingestInbound({ igUserId: uid(), mid: mid(), text: 'cod available?', timestamp: Date.now() - 20_000 });
+  const urgent = await ingestInbound({ igUserId: uid(), mid: mid(), text: 'wrong size sent, worst experience' });
+  const ids = (await listConversations({ filter: 'NEEDS_REPLY' })).map((c) => c.id);
+  assert.ok(ids.indexOf(urgent.conversationId) < ids.indexOf(normal.conversationId));
+});
+
+test('likely spam does not jump the queue even when overdue, but is still flagged', async () => {
+  const spam = await ingestInbound({
+    igUserId: uid(), mid: mid(), text: 'get 10k followers click link', timestamp: Date.now() - 3 * 3600_000,
+  });
+  const fresh = await ingestInbound({ igUserId: uid(), mid: mid(), text: 'size chart pls' });
+  await markOverdue(new Date(), 3600);
+  const spamConv = await getConversation(spam.conversationId);
+  assert.equal(spamConv.priority, 'LOW');
+  assert.equal(spamConv.is_overdue, true);
+  const ids = (await listConversations({ filter: 'NEEDS_REPLY' })).map((c) => c.id);
+  assert.ok(ids.indexOf(fresh.conversationId) < ids.indexOf(spam.conversationId));
+  assert.ok((await listConversations({ filter: 'OVERDUE' })).some((c) => c.id === spam.conversationId));
+});
+
+test('an agent correction overrides the prediction without erasing it', async () => {
+  const { conversationId, messageId } = await ingestInbound({ igUserId: uid(), mid: mid(), text: 'asdfgh qwerty' });
+  const result = await correctIntent(messageId, 'complaint', 'Meera');
+  assert.equal(result.conversation.priority, 'URGENT');
+  const msg = (await getConversation(conversationId)).messages[0];
+  assert.equal(msg.intent_corrected, 'complaint');
+  assert.ok(msg.intent, 'original prediction kept');
+  await assert.rejects(correctIntent(messageId, 'banana'), { status: 400 });
+
+  const csv = await exportLabelsCsv({ correctedOnly: true });
+  assert.match(csv, /^id,text,intent,predicted/);
+  assert.match(csv, /asdfgh qwerty,complaint,/);
+});
+
+test('intent filter and backfill of unlabelled messages', async () => {
+  const { conversationId, messageId } = await ingestInbound({ igUserId: uid(), mid: mid(), text: 'COD available?' });
+  await getDb().query(`UPDATE messages SET intent = NULL WHERE id = $1`, [messageId]);
+  const result = await backfillIntents();
+  assert.ok(result.messages >= 1);
+  const listed = await listConversations({ filter: 'ALL', intent: 'cod_shipping' });
+  assert.ok(listed.some((c) => c.id === conversationId));
+  await assert.rejects(listConversations({ intent: 'banana' }), { status: 400 });
+});

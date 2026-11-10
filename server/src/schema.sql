@@ -63,3 +63,20 @@ CREATE TABLE IF NOT EXISTS status_events (
   reason           TEXT,
   created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- ---------- Phase 2: intent classification ----------
+-- ADD COLUMN IF NOT EXISTS upgrades databases created in Phase 1 without data loss.
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS intent TEXT;                 -- model/rule prediction
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS intent_confidence REAL;
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS intent_source TEXT;          -- model | rules | none
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS intent_low_confidence BOOLEAN;
+-- Human corrections: never overwrite the prediction, so model errors stay measurable
+-- and corrected rows become real training data.
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS intent_corrected TEXT;
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS intent_corrected_by TEXT;
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS intent_corrected_at TIMESTAMPTZ;
+
+ALTER TABLE conversations ADD COLUMN IF NOT EXISTS intent TEXT;
+ALTER TABLE conversations ADD COLUMN IF NOT EXISTS priority TEXT NOT NULL DEFAULT 'NORMAL';  -- URGENT | NORMAL | LOW
+ALTER TABLE conversations ADD COLUMN IF NOT EXISTS customer_chasing BOOLEAN NOT NULL DEFAULT false;
+CREATE INDEX IF NOT EXISTS idx_conversations_intent ON conversations(intent);

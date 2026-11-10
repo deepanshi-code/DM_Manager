@@ -122,3 +122,22 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
   .sidebar { flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--border); }
   .topbar { flex-wrap: wrap; }
 }
+
+/* ---------- Phase 2: intents & priority ---------- */
+.list-tools { display: flex; gap: 8px; margin: 12px; }
+.list-tools .search { margin: 0; flex: 1; min-width: 0; }
+.list-tools select { padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--panel); max-width: 45%; }
+.chip.urgent { background: var(--danger); color: #fff; font-weight: 600; }
+.chip.intent { background: #f1effa; color: #4a3f9e; }
+.chip.intent-complaint { background: var(--danger-soft); color: var(--danger); }
+.chip.intent-spam { background: #eef0f3; color: var(--muted); text-decoration: line-through; }
+.chip.intent-unclassified { background: transparent; border: 1px dashed var(--border); }
+.bubble-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.intent-tag { display: inline-flex; align-items: center; gap: 2px; font-size: 11px; }
+.intent-tag select {
+  font-size: 11px; padding: 1px 4px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--accent-soft); color: var(--accent); cursor: pointer;
+}
+.intent-tag.unsure select { border-style: dashed; background: var(--warn-soft); color: var(--warn); }
+.intent-tag.corrected select { background: var(--ok-soft); color: var(--ok); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

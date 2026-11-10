@@ -1,0 +1,958 @@
+text,intent,template_id
+how much for the beige sling bag,price,price:06
+"hi increase your reach, 100% real followers",spam,spam:09
+Pr package hbej sakte ho?,collab,collab:02
+IS IT TRUE TO SIZE?,size,size:07
+your page is so pretty,greeting,greeting:08
+is the lehenga under 1500?,price,price:15
+hi dm price,price,price:12
+does l run small thanks,size,size:11
+available? ❤️,availability,availability:05
+HELLO QUALITY IS NOT LIKE THE PICTURES. NOT HAPPY,complaint,complaint:03
+order #73352 kab aayega thanks,order_status,order_status:00
+Sir colour faded after one wash,complaint,complaint:10
+hii let's collaborate,collab,collab:04
+hii is this item available now plz,availability,availability:12
+ANYONE THERE?,follow_up,follow_up:03
+PRICE PLEASE,price,price:00
+refund status for order 65433,return_exchange,return_exchange:02
+Mam can i pay on delivery,cod_shipping,cod_shipping:08
+hii order #97109 kab aayega,order_status,order_status:00
+send this to 10 friends,spam,spam:12
+AVAILABLE PLZ,availability,availability:05
+hi stock hai? 🙏,availability,availability:04
+"what size should i take, height 5'4",size,size:06
+namaste plz,greeting,greeting:09
+dm for crypto investment tips pls,spam,spam:05
+sir can i pay on delivery,cod_shipping,cod_shipping:08
+"hi we are a marketing agency, can we talk",collab,collab:11
+Hi shipped or not? order 10000,order_status,order_status:10
+mam express delivery available?,cod_shipping,cod_shipping:12
+"IT'S BEEN A WEEK, WHERE IS MY PARCEL",order_status,order_status:06
+Bhai reply karo pls,follow_up,follow_up:15
+ping please,follow_up,follow_up:13
+Order #65433 kab aayega,order_status,order_status:00
+Hello refund not received yet for 57514,return_exchange,return_exchange:11
+Is this back in stock please 😭,availability,availability:00
+hello let's collaborate,collab,collab:04
+parcel stuck at dlehi hub,order_status,order_status:12
+i want a refund 🔥,return_exchange,return_exchange:07
+mam price of jhumkas in s?,price,price:20
+hello i want a refund,return_exchange,return_exchange:07
+Sir f4f,spam,spam:11
+get 10k followers in 1 day!! click link in bio,spam,spam:00
+Is the co-ord set under 1500???,price,price:15
+PRICE IN DM,price,price:11
+BUY FOLLOWERS CHEAP BHAI,spam,spam:06
+mint green colour milega plz,availability,availability:08
+size chart pls,size,size:02
+HEY WORST EXPERIENCE VEER,complaint,complaint:05
+sir refund not received yet for 89190,return_exchange,return_exchange:11
+the hoodie is torn,complaint,complaint:06
+can you share your collab terms please 😍,collab,collab:12
+hi kya s mein milega,size,size:08
+hello bhai,greeting,greeting:01
+out of stock kyu dikha raha hai bhai ❤️,availability,availability:13
+Can i pay on delivery asap 🔥,cod_shipping,cod_shipping:08
+m size hai thanks,size,size:01
+Worst experience ever 😭,complaint,complaint:05
+plz answer asap,follow_up,follow_up:10
+THANK YOU,greeting,greeting:15
+any update yaar 🔥,follow_up,follow_up:14
+"sir your account will be suspended, verify here",spam,spam:07
+ORDER STATUS FOR 65433?,order_status,order_status:07
+WHY NO REPLY,follow_up,follow_up:07
+hi refund status for order 57514,return_exchange,return_exchange:02
+SIR MY ORDER HASN'T ARRIVED YET,order_status,order_status:04
+Hi ji,greeting,greeting:00
+sir is it true to size,size,size:07
+"make money online, no nivestment",spam,spam:13
+hey bust size for m?,size,size:09
+Bust size for XL,size,size:09
+dm for crypto investment tips please,spam,spam:05
+Stokc hai???,availability,availability:04
+hey express delivery available yaar,cod_shipping,cod_shipping:12
+"very poor quality, waste of money pls",complaint,complaint:09
+why no rpely,follow_up,follow_up:07
+ji,follow_up,follow_up:08
+Out of stock kyu dikha raha hai,availability,availability:13
+"hii i make reels, can we work together please 🥺",collab,collab:05
+hi thanks,greeting,greeting:00
+PRICE BHAI,price,price:00
+rate?,price,price:10
+i want to complain about my order 41676 please,complaint,complaint:13
+Sir restock kab hoga yaar,availability,availability:10
+the jhumkas is torn,complaint,complaint:06
+Hello colour faded after one wash,complaint,complaint:10
+Let's collaborate thanks,collab,collab:04
+hi return pickup kab hoga,return_exchange,return_exchange:10
+Track my order pls plz,order_status,order_status:08
+mam kaunsa size lu 🙏,size,size:15
+seen karke reply nahi kiya,follow_up,follow_up:11
+mam pp please,price,price:03
+Hii tote bag available hai 😍,availability,availability:01
+Kaunsa size lu,size,size:15
+return pickup kab hoga,return_exchange,return_exchange:10
+Send this to 10 friends pls,spam,spam:12
+How do i return the saree,return_exchange,return_exchange:00
+Hi size chart pls,size,size:02
+"received a damaged dupatta, very disappointed ji 🥺",complaint,complaint:00
+namaste ji ❤️,greeting,greeting:09
+bust size for xl bhai 🙏,size,size:09
+Are you open to ugc content yaar,collab,collab:09
+Is shipping free above 500 pls 😭,cod_shipping,cod_shipping:10
+lehenga ka length kitna hai yaar,size,size:10
+hello is shipping free above 1000,cod_shipping,cod_shipping:10
+OBSESSED WITH YOUR STUFF 🔥,greeting,greeting:14
+Sir out of stock kyu dikha raha hai,availability,availability:13
+iska price kya hai asap,price,price:08
+Hii order 89190 still not shipped thanks,order_status,order_status:03
+mam brand ambassador program hai 😍,collab,collab:10
+DM PIRCE,price,price:12
+collab???,collab,collab:01
+PLZ ANSWER,follow_up,follow_up:10
+cod option hai?,cod_shipping,cod_shipping:07
+stcok hai plz,availability,availability:04
+"I make reels, can we work together asap 😍",collab,collab:05
+size chart pls yaar,size,size:02
+Price of co-ord set in M?,price,price:20
+xxl size hai?,size,size:01
+Express delivery available?,cod_shipping,cod_shipping:12
+Ping 😭,follow_up,follow_up:13
+hey do you deliver to pincode 248001,cod_shipping,cod_shipping:11
+hii pp?,price,price:03
+Hey pp?,price,price:03
+"It's been a week, where is my parcel",order_status,order_status:06
+dm price,price,price:12
+Hii quality is not like the pictures. not happy,complaint,complaint:03
+sling bag available hai please,availability,availability:01
+mam denim jacket available hai,availability,availability:01
+refund not received yet for 65433,return_exchange,return_exchange:11
+hi how much is this one,price,price:16
+"increase your reach, 100% real followers",spam,spam:09
+buy followers cheap ji,spam,spam:06
+return poilcy kya hai,return_exchange,return_exchange:05
+IS SHIPPING FREE ABOVE 1000?,cod_shipping,cod_shipping:10
+why no reply plz,follow_up,follow_up:07
+how do i return the anarkali,return_exchange,return_exchange:00
+"I make reels, can we work together",collab,collab:05
+"HEY YOUR ACCOUNT WILL BE SUSPENDED, VERIFY HERE",spam,spam:07
+can i still order the jhumkas,availability,availability:11
+"Hi cheated, paisa gaya",complaint,complaint:15
+hey order status for 49595,order_status,order_status:07
+HOW MUCH FOR THE MAROON HOODIE,price,price:06
+THE OVERSIZED TEE IS TORN,complaint,complaint:06
+sir cod available? 😭,cod_shipping,cod_shipping:00
+Do you have plus sizes ❤️,size,size:05
+can i pay on delivery 😍,cod_shipping,cod_shipping:08
+shipping free hai?,cod_shipping,cod_shipping:05
+HI PRICE PLS PLEASE 🔥,price,price:01
+I WANT A REFUND,return_exchange,return_exchange:07
+Is the crop top under 2000?,price,price:15
+HII,greeting,greeting:03
+return policy kya hai 🙏,return_exchange,return_exchange:05
+"it's been a week, where is my parcel",order_status,order_status:06
+hello collab? ❤️,collab,collab:01
+CAN I STILL ORDER THE HOODIE ASAP,availability,availability:11
+shipped or not? order 25838 yaar,order_status,order_status:10
+Cahs on delivery hai kya,cod_shipping,cod_shipping:01
+kitne din mein aayega mumbai mein plz,cod_shipping,cod_shipping:09
+"sir this is so bad, the stitching came off",complaint,complaint:04
+seen karke reply nahi kiya 😭,follow_up,follow_up:11
+DID MY ORDER 65433 GO OUT TODAY?,order_status,order_status:14
+"increase your reach, 100% real followers 🔥",spam,spam:09
+anarkali ka length kitna hai,size,size:10
+Ji?,follow_up,follow_up:08
+is there a return window??? ❤️,return_exchange,return_exchange:13
+Plz answer,follow_up,follow_up:10
+i want to complain about my order 81271,complaint,complaint:13
+"Hello fake product, not what was shown 🥺",complaint,complaint:08
+sir dm for crypto investment tips asap,spam,spam:05
+"make money online, no investment thanks",spam,spam:13
+xs size hai? 😍,size,size:01
+return pickup kab hoga 🙏,return_exchange,return_exchange:10
+ji?,follow_up,follow_up:08
+"hii increase your reach, 100% real followers",spam,spam:09
+Bhai reply karo,follow_up,follow_up:15
+sir buy followers cheap,spam,spam:06
+reply kab karoge,follow_up,follow_up:12
+"Received a damaged oversized tee, very disappointed",complaint,complaint:00
+is this item available now,availability,availability:12
+m size hai yaar,size,size:01
+bust size for xs?,size,size:09
+"hi cheated, paisa gaya",complaint,complaint:15
+"Hello it's been a week, where is my parcel",order_status,order_status:06
+quality is not like the pictures. not happy,complaint,complaint:03
+does l run small,size,size:11
+XL AVAILABLE,size,size:12
+you won a giveaway! claim now,spam,spam:03
+when will the olive one restock ❤️,availability,availability:02
+HII MERA ORDER KAB TAK AAYEGA,order_status,order_status:09
+hii is this item available now pls,availability,availability:12
+hi how many dyas for refund,return_exchange,return_exchange:06
+Buy followers cheap 😭,spam,spam:06
+parcel stuck at jaipru hub 😭,order_status,order_status:12
+price?,price,price:00
+Stock hai,availability,availability:04
+hey exchange ka process batao,return_exchange,return_exchange:09
+Pr package bhej sakte ho 😭,collab,collab:02
+do you deliver to lucknow,cod_shipping,cod_shipping:02
+Hii i want to complain about my order 81271,complaint,complaint:13
+is this back in stock ji,availability,availability:00
+price pls,price,price:01
+obsessed wiht your stuff,greeting,greeting:14
+is the dupatta under 2000,price,price:15
+beautiful collection ji 🙏,greeting,greeting:06
+beautiful collection!,greeting,greeting:06
+Hi track my order pls plz,order_status,order_status:08
+SIR PROMOTE YOUR PAGE AT CHEAP PRICE THANKS,spam,spam:01
+mam exchange ka process batao,return_exchange,return_exchange:09
+worst experience ever,complaint,complaint:05
+Dehradun delivery possible???,cod_shipping,cod_shipping:13
+hi do you deliver to indore please,cod_shipping,cod_shipping:02
+SEEN KARKE REPLY NAHI KIYA,follow_up,follow_up:11
+AMAZING WORK,greeting,greeting:07
+"hello returning the hoodie, how?",return_exchange,return_exchange:14
+hi send this to 10 friends,spam,spam:12
+Your page is so pretty,greeting,greeting:08
+sir do you have plus sizes,size,size:05
+SEEN KARKE REPLY NAHI KIYA 😍,follow_up,follow_up:11
+Sir let's collaborate,collab,collab:04
+cash on delivery hai kya thanks,cod_shipping,cod_shipping:01
+sir olive colour milega ji,availability,availability:08
+do you have plus sizes,size,size:05
+is it true to size???,size,size:07
+Return pickup kab hoga,return_exchange,return_exchange:10
+is this back in stock pls,availability,availability:00
+SIR PP,price,price:02
+Amazing work,greeting,greeting:07
+collab,collab,collab:01
+Quality is not like the pictures. not happy,complaint,complaint:03
+PRICE OF JHUMKAS IN XL THANKS,price,price:20
+Does XS run small???,size,size:11
+bust size for l?,size,size:09
+out of stock kyu dikha raha hai,availability,availability:13
+Lehenga kitna ka hai,price,price:07
+beatuiful collection!,greeting,greeting:06
+hey crop top kitna ka hai,price,price:07
+express delivery available,cod_shipping,cod_shipping:12
+"we are a marketing agency, can we talk",collab,collab:11
+NICE,greeting,greeting:13
+is the sling bag under 2000,price,price:15
+how much for the pink hoodie,price,price:06
+CASH ON DELIEVRY HAI KYA,cod_shipping,cod_shipping:01
+hii,greeting,greeting:03
+EXPRESS DELIVERY AVAILABLE THANKS,cod_shipping,cod_shipping:12
+Send this to 10 friends,spam,spam:12
+sir let's collaborate ❤️,collab,collab:04
+did my order 17919 go out today?,order_status,order_status:14
+xxl size hai,size,size:01
+how much is this one,price,price:16
+Sir can i still order the dupatta,availability,availability:11
+when will the olive one restock,availability,availability:02
+price in dm,price,price:11
+Stcok hai,availability,availability:04
+hii worst experience ever thanks,complaint,complaint:05
+HOW MUCH IS THIS ONE THANKS,price,price:16
+I want to complain about my order 97109 asap,complaint,complaint:13
+hi refund status for order 89190,return_exchange,return_exchange:02
+Exchange ka process batao,return_exchange,return_exchange:09
+Hii kya L mein milega,size,size:08
+hi colour faded after one wash asap,complaint,complaint:10
+express deilvery available?,cod_shipping,cod_shipping:12
+hey there,greeting,greeting:10
+cod available plz,cod_shipping,cod_shipping:00
+Your page is so pretty 😍,greeting,greeting:08
+DM PRICE 🔥,price,price:12
+hi,greeting,greeting:00
+"This is so bad, the stitching came off",complaint,complaint:04
+Mam bahut ganda quality hai,complaint,complaint:12
+"increase your reach, 100% real followers asap",spam,spam:09
+My order hasn't arrived yet,order_status,order_status:04
+promote your page at cheap price,spam,spam:01
+Price batao,price,price:17
+XXL available? 😍,size,size:12
+refund status for order 97109,return_exchange,return_exchange:02
+sir xl size hai? 😍,size,size:01
+Rate?,price,price:10
+Order status for 41676,order_status,order_status:07
+hello return policy kya hai,return_exchange,return_exchange:05
+HELLO BUY FOLLOWERS CHEAP,spam,spam:06
+hii pp,price,price:02
+Bahut ganda quality hai,complaint,complaint:12
+namaste,greeting,greeting:09
+MY ORDER HASN'T ARRIVED YET,order_status,order_status:04
+hello where is my order 89190 🔥,order_status,order_status:01
+co-ord set kitna ka hai,price,price:07
+mam promote your page at cheap price thanks,spam,spam:01
+cash on delivery hai kya,cod_shipping,cod_shipping:01
+Still waiting for a reply 😭,follow_up,follow_up:04
+HOW DO I RETURN THE OVERSIZED TEE,return_exchange,return_exchange:00
+sir size chart pls,size,size:02
+mam is this item available now,availability,availability:12
+"WHAT SIZE SHOULD I TAKE, HEIGHT 5'4 BHAI",size,size:06
+Reply pls 🔥,follow_up,follow_up:05
+any update,follow_up,follow_up:14
+ARE YOU OPEN TO UGC CONTENT?,collab,collab:09
+Hey bahut ganda quality hai,complaint,complaint:12
+did my order 81271 go out today? 🔥,order_status,order_status:14
+bust size for s???,size,size:09
+restock kab hoga ❤️,availability,availability:10
+Price batao ji,price,price:17
+how much for the olive saree,price,price:06
+Hey available? 🔥,availability,availability:05
+hi is the lehenga under 1500?,price,price:15
+waiting please,follow_up,follow_up:09
+anyone there asap,follow_up,follow_up:03
+Hey how much for the navy anarkali,price,price:06
+ji ji,follow_up,follow_up:08
+hii f4f thanks,spam,spam:11
+"Cheated, paisa gaya",complaint,complaint:15
+order #25838 kab aayega plz 🥺,order_status,order_status:00
+kaunsa size lu,size,size:15
+SHIPPING FREE HAI,cod_shipping,cod_shipping:05
+cod available ayar,cod_shipping,cod_shipping:00
+mam size chatr pls,size,size:02
+Pr package bhej sakte ho,collab,collab:02
+exchange ka process batao ❤️,return_exchange,return_exchange:09
+"hi what size should i take, height 5'4",size,size:06
+hey would love to feature your anarkali in my reel please,collab,collab:08
+hello is this back in stock 😍,availability,availability:00
+is this back in stock,availability,availability:00
+Price?,price,price:00
+Kaunsa size lu plz,size,size:15
+do you have plus sizes plz,size,size:05
+Owuld love to feature your sling bag in my reel,collab,collab:08
+how many days for refund,return_exchange,return_exchange:06
+"HELLO FAKE PRODUCT, NOT WHAT WAS SHOWN",complaint,complaint:08
+"Your account will be suspended, verify here please",spam,spam:07
+is this back in stock ❤️,availability,availability:00
+SIZE CHART PLS ASAP,size,size:02
+dm for crypto investment tips ji,spam,spam:05
+shipped or not? order 89190 ji,order_status,order_status:10
+COD AVAILABLE?,cod_shipping,cod_shipping:00
+Hsipped or not? order 41676 please,order_status,order_status:10
+hey did my order 41676 go out today?,order_status,order_status:14
+Want to swap for olive thanks,return_exchange,return_exchange:12
+refund not received yet for 97109 please,return_exchange,return_exchange:11
+hello would love to feature your tote bag in my reel,collab,collab:08
+price of co-ord set in S?,price,price:20
+mam where is my order 65433 bhai,order_status,order_status:01
+still waiting for a reply bhai,follow_up,follow_up:04
+bust size for xxl thansk,size,size:09
+"very poor quality, waste of money",complaint,complaint:09
+m size hai,size,size:01
+hi price???,price,price:00
+pr package bhej sakte ho,collab,collab:02
+shipped or not? order 81271 ❤️,order_status,order_status:10
+hi ji,greeting,greeting:00
+M available?,size,size:12
+PP?,price,price:03
+price,price,price:00
+parcel stuck at haldwani hub,order_status,order_status:12
+I want to complain about my order 73352,complaint,complaint:13
+HALDWANI DELIVERY POSSIBLE,cod_shipping,cod_shipping:13
+STILL WAITING FOR A REPLY PLZ,follow_up,follow_up:04
+hii available please,availability,availability:05
+hey what does the olive one cost,price,price:18
+Hii how much for the beige anakrali,price,price:06
+"We are a marketing agency, can we talk",collab,collab:11
+sir price of jhumkas in xs?,price,price:20
+are you open to ugc content,collab,collab:09
+when will the maroon one restock ji,availability,availability:02
+Order status for 41676?,order_status,order_status:07
+HII PRICE OF TOTE BAG IN S JI ❤️,price,price:20
+anyone there plz,follow_up,follow_up:03
+ORDER #17919 KAB AAYEGA PLEASE 🔥,order_status,order_status:00
+would love to feature your lehenga in my reel,collab,collab:08
+Does XS run small,size,size:11
+"Make monye online, no investment",spam,spam:13
+"returning the sling bag, how?",return_exchange,return_exchange:14
+Hey when is the next drop,availability,availability:09
+hello mint green colour milega?,availability,availability:08
+Anyone there?,follow_up,follow_up:03
+Order #97109 kab aayega,order_status,order_status:00
+Interested in a paid promotion?,collab,collab:03
+REFUND STATUS FOR ORDER 73352,return_exchange,return_exchange:02
+denim jacket ka length kitna hai,size,size:10
+i want a refund,return_exchange,return_exchange:07
+L AVAILABLE?,size,size:12
+bhai reply karo,follow_up,follow_up:15
+mam dehradun delivery possible???,cod_shipping,cod_shipping:13
+Pp,price,price:02
+mam when is the next drop,availability,availability:09
+"hey increase your reach, 100% real followers",spam,spam:09
+EXPRESS DELIVERY AVAILABLE,cod_shipping,cod_shipping:12
+Kya XXL mein milega,size,size:08
+shipping free hai,cod_shipping,cod_shipping:05
+How mcuh is this one,price,price:16
+Restock kab hoga,availability,availability:10
+Is this item available now,availability,availability:12
+"mam make money online, no investment 🥺",spam,spam:13
+"your account will be suspended, verify here bhai",spam,spam:07
+plz answer ji,follow_up,follow_up:10
+Hii tote bag kitna ka hai,price,price:07
+mera order kab tak aayega pls,order_status,order_status:09
+worst experience ever 🙏,complaint,complaint:05
+Hii when is the next drop,availability,availability:09
+I want a refund pls,return_exchange,return_exchange:07
+is shipping free above 500,cod_shipping,cod_shipping:10
+Kitne din mein aayega Pune mein,cod_shipping,cod_shipping:09
+mam parcel stuck at pune hub,order_status,order_status:12
+collab?,collab,collab:01
+"I make reels, can we work together yaar",collab,collab:05
+HEY DID MY ORDER 97109 GO OUT TODAY,order_status,order_status:14
+KYA XXL MEIN MILEGA,size,size:08
+Collab,collab,collab:01
+Cash on delivery hai kya,cod_shipping,cod_shipping:01
+anyone there? ❤️,follow_up,follow_up:03
+hello can i still order the anarkali,availability,availability:11
+Hello collab?,collab,collab:01
+HEY ISKA PRICE KYA HAI JI,price,price:08
+hi order 25838 still not shipped 🔥,order_status,order_status:03
+hii pls,greeting,greeting:03
+mam mera order kab tak aayega,order_status,order_status:09
+Palazzo kitna ka hai,price,price:07
+hii i want a refund,return_exchange,return_exchange:07
+Anarkali available hai,availability,availability:01
+Mera order kab tak aayega plz,order_status,order_status:09
+mam is this back in stock,availability,availability:00
+sir get 10k followers in 1 day!! click link in bio,spam,spam:00
+HII HOW DO I RETURN THE DENIM JACKET,return_exchange,return_exchange:00
+"hey increase your reach, 100% real followers asap",spam,spam:09
+MAM IS THERE A RETURN WINDOW PLZ,return_exchange,return_exchange:13
+still waiting for a reply yaar,follow_up,follow_up:04
+HEY DM PRICE,price,price:12
+order status for 73352,order_status,order_status:07
+"what size should i take, height 5'4 thanks",size,size:06
+sir what does the olive one cost,price,price:18
+i want to complain about my order 25838,complaint,complaint:13
+sir can i still order the crop top,availability,availability:11
+haldwani delivery possible thanks,cod_shipping,cod_shipping:13
+XS available,size,size:12
+hi reporting your page if no reply,complaint,complaint:14
+amazing work bhai,greeting,greeting:07
+Would love to feature your kurta in my reel 🥺,collab,collab:08
+IS THIS ITEM AVAILABLE NOW,availability,availability:12
+Hi is this item available now,availability,availability:12
+Get 10k followers in 1 day!! click link in bio,spam,spam:00
+waiting,follow_up,follow_up:09
+any update??,follow_up,follow_up:14
+hi collab yaar,collab,collab:01
+tote bag kitna ka hai,price,price:07
+hi refund not received yet for 25838 😭,return_exchange,return_exchange:11
+hey order status for 81271???,order_status,order_status:07
+Hoodie kitna ka hai please,price,price:07
+the leehnga is torn,complaint,complaint:06
+nice,greeting,greeting:13
+sir Lucknow delivery possible,cod_shipping,cod_shipping:13
+the sling bag is torn,complaint,complaint:06
+sir parcel stuck at delhi hub,order_status,order_status:12
+hi please,greeting,greeting:00
+anyone there?,follow_up,follow_up:03
+sir stock hai?,availability,availability:04
+"fake product, not what was shown",complaint,complaint:08
+amazing work thanks,greeting,greeting:07
+Collab?,collab,collab:01
+mam kaunsa size lu,size,size:15
+sir refund status for order 17919,return_exchange,return_exchange:02
+refund not received yet for 49595,return_exchange,return_exchange:11
+HEY THERE,greeting,greeting:10
+Order 81271 still not shipped yaar,order_status,order_status:03
+"Returning the lehenga, how?",return_exchange,return_exchange:14
+hello collab,collab,collab:01
+is there a return window,return_exchange,return_exchange:13
+M SIZE HAI?,size,size:01
+hii bust size for s???,size,size:09
+how much for the maroon hoodie,price,price:06
+"your account will be suspended, verify here",spam,spam:07
+hey can i pay on delivery 🙏,cod_shipping,cod_shipping:08
+rate please,price,price:10
+Hey colour faded after one wash,complaint,complaint:10
+hello order #25838 kab aayega pls,order_status,order_status:00
+"Received a damaged sling bag, very disappointed",complaint,complaint:00
+My order hasn't arrived yet bhai,order_status,order_status:04
+Let's collabroate,collab,collab:04
+COD OPTINO HAI???,cod_shipping,cod_shipping:07
+Parcel stuck at Mumbai hub thanks,order_status,order_status:12
+refund not received yet for 65433 😭,return_exchange,return_exchange:11
+Ping yaar,follow_up,follow_up:13
+plz answer,follow_up,follow_up:10
+Hello i want a refund,return_exchange,return_exchange:07
+is the co-ord set under 1000?,price,price:15
+MAM COD AVAILABLE?,cod_shipping,cod_shipping:00
+Mam want to swap for white ❤️,return_exchange,return_exchange:12
+"sir received a damaged co-ord set, very disappointed ❤️",complaint,complaint:00
+iska price kya hai,price,price:08
+sir shipped or not? order 97109 pls 🥺,order_status,order_status:10
+nmaaste,greeting,greeting:09
+OLIVE COLOUR MILEGA PLS,availability,availability:08
+MAM OUT OF STOCK KYU DIKHA RAHA HAI PLS,availability,availability:13
+Brand ambassador program hai pls 😍,collab,collab:10
+WAITING,follow_up,follow_up:09
+Jhumkas ka length kitna hai,size,size:10
+sir iska price kya hai plz,price,price:08
+Would love to feature your oversized tee in my reel,collab,collab:08
+How do i return the lehenga,return_exchange,return_exchange:00
+kya xl mein milega aspa,size,size:08
+hey refudn status for order 97109 pls,return_exchange,return_exchange:02
+"Hey returning the dupatta, how?",return_exchange,return_exchange:14
+RATE,price,price:10
+did my order 25838 go out today bhai,order_status,order_status:14
+would love to feature your jhumkas in my reel,collab,collab:08
+how do i return the saree asap,return_exchange,return_exchange:00
+ANY UPDATE??,follow_up,follow_up:14
+"hii very poor quality, waste of money",complaint,complaint:09
+Parcel stuck at Chandigarh hub,order_status,order_status:12
+pp plz,price,price:02
+hi want to swap for white 🥺,return_exchange,return_exchange:12
+PP,price,price:02
+hey kurta available hai ji ❤️,availability,availability:01
+hi order 81271 still not shipped 😍,order_status,order_status:03
+Hii,greeting,greeting:03
+hello is it true to size,size,size:07
+return policy kya hai ❤️,return_exchange,return_exchange:05
+hi track my odrer pls bhai,order_status,order_status:08
+WANT TO SWAP FOR BLACK THANKS,return_exchange,return_exchange:12
+I want a refund,return_exchange,return_exchange:07
+let's collaborate,collab,collab:04
+What does the black one csot,price,price:18
+KITNE DIN MEIN AAYEGA JAIPUR MEIN,cod_shipping,cod_shipping:09
+Mam denim jacket available hai please,availability,availability:01
+DOES XL RUN SMALL?,size,size:11
+return policy kya hai,return_exchange,return_exchange:05
+does xs run small???,size,size:11
+Hello you won a giveaway! claim now,spam,spam:03
+Sir dm price,price,price:12
+jaipur delivery possible 🔥,cod_shipping,cod_shipping:13
+Worst experience ever,complaint,complaint:05
+Promote your page at cheap price,spam,spam:01
+Order #57514 kab aayega,order_status,order_status:00
+Cod otpion hai?,cod_shipping,cod_shipping:07
+price ji,price,price:00
+Seen karke reply nahi kiya asap,follow_up,follow_up:11
+price thanks,price,price:00
+"We are a marketing agency, can we talk ji",collab,collab:11
+Hello,greeting,greeting:01
+dehradun delivery possible? 🥺,cod_shipping,cod_shipping:13
+HII RATE,price,price:10
+Hi price in dm,price,price:11
+mam pp,price,price:02
+White colour milega ji,availability,availability:08
+ping,follow_up,follow_up:13
+colour faded after one wash,complaint,complaint:10
+Hi worst experience ever,complaint,complaint:05
+Hii kitne din mein aayega Mumbai mein,cod_shipping,cod_shipping:09
+is the tote bag under 1000?,price,price:15
+can you share your collab terms asap,collab,collab:12
+sir when will the white one restock,availability,availability:02
+hii kaunsa size lu ❤️,size,size:15
+ORDER 10000 STILL NOT SHIPPED JI,order_status,order_status:03
+Mustard colour milega,availability,availability:08
+does m run small???,size,size:11
+hello are you open to ugc content,collab,collab:09
+send this to 10 friends plz,spam,spam:12
+HII PLZ,greeting,greeting:03
+order status for 97109,order_status,order_status:07
+tote bag ka length kitna hai,size,size:10
+Is shipping free above 1500,cod_shipping,cod_shipping:10
+PING,follow_up,follow_up:13
+hi bahut ganda quality hai,complaint,complaint:12
+does m run small 🥺,size,size:11
+kitne din mein aayega lucknow mein pls,cod_shipping,cod_shipping:09
+"What size should i take, height 5'4",size,size:06
+Did my order 97109 go out today?,order_status,order_status:14
+Ji thanks,follow_up,follow_up:08
+order 41676 still not shipped,order_status,order_status:03
+can you share your collab terms,collab,collab:12
+hii order 25838 still not shipped,order_status,order_status:03
+Hii price batao 😍,price,price:17
+you won a giveaway! claim now 🙏,spam,spam:03
+cod option hai,cod_shipping,cod_shipping:07
+"received a damaged kurta, very disappointed",complaint,complaint:00
+F4f please,spam,spam:11
+pp plz,price,price:03
+hello send this to 10 friends,spam,spam:12
+dupatta ka lenght kitna hai,size,size:10
+"Hey your account will be suspended, verify here",spam,spam:07
+S available?,size,size:12
+kya xl mein milega,size,size:08
+my order hasn't arrived yet,order_status,order_status:04
+refund not received yet for 57514 ❤️,return_exchange,return_exchange:11
+sir the oversized tee is torn,complaint,complaint:06
+WAIITNG,follow_up,follow_up:09
+hi L size hai thanks,size,size:01
+sir do you deliver to pincode 248001,cod_shipping,cod_shipping:11
+"hello very poor quality, waste of money thanks",complaint,complaint:09
+price please,price,price:00
+do you deliver to chandigarh,cod_shipping,cod_shipping:02
+hello want to swap for navy plz,return_exchange,return_exchange:12
+"WHAT SIZE SHOULD I TAKE, HEIGHT 5'4",size,size:06
+order 97109 still not shipped,order_status,order_status:03
+Nice,greeting,greeting:13
+Beautiful collection!,greeting,greeting:06
+When will the olive one restock,availability,availability:02
+cod option hai please,cod_shipping,cod_shipping:07
+cash on delivery hai kya ji,cod_shipping,cod_shipping:01
+"cheated, paisa gaya",complaint,complaint:15
+brand ambassador program hai,collab,collab:10
+hello shipped or not? order 33757,order_status,order_status:10
+lehenga available hai,availability,availability:01
+hey where is my order 25838 pls,order_status,order_status:01
+Would love to feature your kurta in my reel ❤️,collab,collab:08
+Obsessed wtih your stuff,greeting,greeting:14
+hello refund status for order 49595,return_exchange,return_exchange:02
+Hello pp,price,price:03
+mustard colour milega?,availability,availability:08
+"i make reels, can we work together",collab,collab:05
+Ince,greeting,greeting:13
+"fake product, not what was shown thanks",complaint,complaint:08
+would love to feature your palazzo in my reel pls,collab,collab:08
+price in dm 🥺,price,price:11
+mam is it true to size?,size,size:07
+did my order 10000 go out today ji,order_status,order_status:14
+reply?,follow_up,follow_up:05
+obsessed with your stuff,greeting,greeting:14
+"returning the denim jacket, how?",return_exchange,return_exchange:14
+HEY MERA ORDER KAB TAK AAYEGA PLS,order_status,order_status:09
+hii brand ambassador program hai???,collab,collab:10
+pp asap,price,price:02
+bust size for xl?,size,size:09
+PRICE IN DM YAAR,price,price:11
+track my order pls plz,order_status,order_status:08
+YOUR PAGE IS SO PRETTY,greeting,greeting:08
+obsessed with your stuff 😍,greeting,greeting:14
+"WE ARE A MARKETING AGENCY, CAN WE TALK 🙏",collab,collab:11
+Send this to 10 friends yaar,spam,spam:12
+ISKA PRICE KYA HAI,price,price:08
+hi quality is not like the pictures. not happy,complaint,complaint:03
+restock kab hoga,availability,availability:10
+Parcel stuck at Dehradun hub yaar,order_status,order_status:12
+Interested in a paid promotion bhai ❤️,collab,collab:03
+"returning the denim jacket, how thanks",return_exchange,return_exchange:14
+dm for crypto investment tips,spam,spam:05
+promote your page at cheap price 😍,spam,spam:01
+Hi,greeting,greeting:00
+Obsessed with your stuff yaar,greeting,greeting:14
+do you deliver to mumbai,cod_shipping,cod_shipping:02
+refund not received yet for 81271,return_exchange,return_exchange:11
+did my order 25838 go out today pls,order_status,order_status:14
+sir how many days for refund,return_exchange,return_exchange:06
+What does the white one cost,price,price:18
+Size chart pls,size,size:02
+"this is so bad, the stitching came off",complaint,complaint:04
+are you open to ugc content?,collab,collab:09
+Available?,availability,availability:05
+Dm for crypto investment tips,spam,spam:05
+Hello do you haev plus sizes,size,size:05
+is the co-ord set under 1000? 😍,price,price:15
+Obsessed with your stuff ji,greeting,greeting:14
+want to swap for white,return_exchange,return_exchange:12
+SHIPPING FREE HAI?,cod_shipping,cod_shipping:05
+hey stokc hai?,availability,availability:04
+hey express delivery available?,cod_shipping,cod_shipping:12
+Express delivery available,cod_shipping,cod_shipping:12
+order status for 73352 asap,order_status,order_status:07
+Reply,follow_up,follow_up:05
+sir express edlivery available?,cod_shipping,cod_shipping:12
+HII WHEN IS THE NEXT DROP JI,availability,availability:09
+Order #41676 kab aayega,order_status,order_status:00
+HELLO,greeting,greeting:01
+hii i want to complain about my order 89190 ji,complaint,complaint:13
+where is my order 49595 🥺,order_status,order_status:01
+HI,greeting,greeting:00
+Beautfiul collection,greeting,greeting:06
+Get 10k followers in 1 day!! click lnik in bio plz,spam,spam:00
+reply kab karoge please,follow_up,follow_up:12
+xxl available,size,size:12
+"received a damaged anarkali, very disappointed",complaint,complaint:00
+Is there a return window???,return_exchange,return_exchange:13
+"reutrning the jhumkas, how",return_exchange,return_exchange:14
+my order hasn't arrived yet asap,order_status,order_status:04
+trakc my order pls,order_status,order_status:08
+HII HOW DO I RETURN THE TOTE BAG,return_exchange,return_exchange:00
+"mam very poor quality, waste of money yaar",complaint,complaint:09
+pp,price,price:02
+Available? 🥺,availability,availability:05
+brand ambassador program hai please,collab,collab:10
+Price pls,price,price:01
+hello is it true to size?,size,size:07
+f4f yaar,spam,spam:11
+dm for crypto investment tips pls ❤️,spam,spam:05
+"MAKE MONEY ONLINE, NO INVESTMENT",spam,spam:13
+Hey when will the mint green one restock asap,availability,availability:02
+Let's collaborate,collab,collab:04
+anarkali available hai,availability,availability:01
+hi when will the mint green one restock,availability,availability:02
+your page is so pretty ❤️,greeting,greeting:08
+amazing work,greeting,greeting:07
+Can i still order the hoodie,availability,availability:11
+Beautiful collection please ❤️,greeting,greeting:06
+hi kya xxl mein milega,size,size:08
+is there a return window?,return_exchange,return_exchange:13
+available?,availability,availability:05
+ji asap,follow_up,follow_up:08
+Mera order kab tak aayega,order_status,order_status:09
+waiting plz,follow_up,follow_up:09
+mam shipping free hai?,cod_shipping,cod_shipping:05
+how much is this one ji,price,price:16
+"received a damaged co-ord set, very disappointed",complaint,complaint:00
+"Sir vrey poor quality, waste of money 🔥",complaint,complaint:09
+out of stock kyu dikha raha hai bhai,availability,availability:13
+amazing work yaar,greeting,greeting:07
+hii order #73352 kab aayega,order_status,order_status:00
+DO YOU HAVE PLUS SIZES,size,size:05
+Hello where is my order 10000 bhai,order_status,order_status:01
+Is shipping free above 999?,cod_shipping,cod_shipping:10
+refudn not received yet for 33757 🔥,return_exchange,return_exchange:11
+Hello kitne din mein aayega Haldwani mein thanks,cod_shipping,cod_shipping:09
+Is it true to size ji 🔥,size,size:07
+Buy followers cheap,spam,spam:06
+order 73352 still not shipped pls,order_status,order_status:03
+pr package bhej sakte ho?,collab,collab:02
+Reply kab karoge,follow_up,follow_up:12
+GET 10K FOLLOWERS IN 1 DAY!! CLICK LINK IN BIO ❤️,spam,spam:00
+Price batao asap,price,price:17
+kaunsa size lu 🥺,size,size:15
+is the co-ord set under 2000?,price,price:15
+ARE YOU OPEN TO UGC CONTENT???,collab,collab:09
+hi colour faded after one wash,complaint,complaint:10
+where is my order 25838,order_status,order_status:01
+palazzo ka length kitna hai thanks,size,size:10
+bhai reply karo please,follow_up,follow_up:15
+brand ambassador program hai?,collab,collab:10
+cod available?,cod_shipping,cod_shipping:00
+"Returning the sling bag, how?",return_exchange,return_exchange:14
+hello reporting your page if no reply,complaint,complaint:14
+are you open to ugc content? 😍,collab,collab:09
+HOW MANY DAYS FOR REFUND,return_exchange,return_exchange:06
+DO YOU DELIVER TO PUNE,cod_shipping,cod_shipping:02
+"HEY THIS IS SO BAD, THE STITCHING CMAE OFF",complaint,complaint:04
+xxl available?,size,size:12
+price of anarkali in m???,price,price:20
+hello pp pls,price,price:02
+hello shipping free hai??? 🥺,cod_shipping,cod_shipping:05
+Why no reply,follow_up,follow_up:07
+kya xs mein milgea,size,size:08
+hii do you deliver to pincode 248001,cod_shipping,cod_shipping:11
+Seen karke reply nahi kiya,follow_up,follow_up:11
+Can i pay on delivery,cod_shipping,cod_shipping:08
+is shipping free above 1500?,cod_shipping,cod_shipping:10
+hey there ji,greeting,greeting:10
+BRAND AMBASSADOR PROGRAM HAI?,collab,collab:10
+When is the next drop,availability,availability:09
+mam kaunsa size lu bhai,size,size:15
+beautiful collection! 🔥,greeting,greeting:06
+does s run small?,size,size:11
+obsessed with your stuff 🥺,greeting,greeting:14
+RETURN POLICY KYA HAI PLZ,return_exchange,return_exchange:05
+bahut ganda quality hai,complaint,complaint:12
+do you deliver to Delhi,cod_shipping,cod_shipping:02
+Order 10000 still not shipped 😭,order_status,order_status:03
+REPORTING YOUR PAGE IF NO REPLY PLZ,complaint,complaint:14
+price batao,price,price:17
+Can you share your collab terms,collab,collab:12
+NAMASTE,greeting,greeting:09
+CASH ON DELIVERY HAI KYA PLZ,cod_shipping,cod_shipping:01
+Do you deliver to Jaipur thanks 🥺,cod_shipping,cod_shipping:02
+mam when will the mint green one restock,availability,availability:02
+Want to swap for white,return_exchange,return_exchange:12
+Colour faded after one wash,complaint,complaint:10
+namaste bhai,greeting,greeting:09
+can i pay on delivery,cod_shipping,cod_shipping:08
+HOW MUCH IS THIS ONE 🔥,price,price:16
+Return policy kya hai,return_exchange,return_exchange:05
+hello saree ka length kitna hai ❤️,size,size:10
+kitne din mein aayega haldwani mein,cod_shipping,cod_shipping:09
+Where is my order 81271,order_status,order_status:01
+You won a giveaway! claim now,spam,spam:03
+shipping free hai yaar,cod_shipping,cod_shipping:05
+"cheated, paisa gaya 😍",complaint,complaint:15
+Is there a return window?,return_exchange,return_exchange:13
+"returning the hoodie, how?",return_exchange,return_exchange:14
+sir is this back in stock,availability,availability:00
+kya XS mein milega thanks,size,size:08
+when is the next drop,availability,availability:09
+i want to complain about my order 57514 😍,complaint,complaint:13
+hi are you open to ugc content bhai,collab,collab:09
+SHIPPED OR NOT? ORDER 10000 PLZ,order_status,order_status:10
+HI COD OPTION HAI?,cod_shipping,cod_shipping:07
+Crop top kitna ka hai,price,price:07
+mera order kab tak aayega,order_status,order_status:09
+can i still order the hoodie 🔥,availability,availability:11
+AVAILABLE THANKS,availability,availability:05
+Is shipping free above 1500 bhai 😭,cod_shipping,cod_shipping:10
+hi kitne din mein aayega lucknow mein,cod_shipping,cod_shipping:09
+"i make reels, can we work together ji",collab,collab:05
+DO YOU DELIVER TO PINCODE 248001,cod_shipping,cod_shipping:11
+maroon colour milega plz,availability,availability:08
+shipped or not? order 65433,order_status,order_status:10
+hey get 10k followers in 1 day!! click link in bio,spam,spam:00
+Pp,price,price:03
+My order hasn't arrived yet aasp ❤️,order_status,order_status:04
+sir out of stock kyu dikha raha hai,availability,availability:13
+Sir what does the pink one cost,price,price:18
+nice yaar ❤️,greeting,greeting:13
+HII I WANT TO COMPLAIN ABOUT MY ORDER 89190 YAAR,complaint,complaint:13
+pp,price,price:03
+Does L run small???,size,size:11
+"received a damaged crop top, very disappointed",complaint,complaint:00
+KURTA AVAILABLE HAI BHAI,availability,availability:01
+Pp?,price,price:03
+hi interested in a paid promotion???,collab,collab:03
+thank you,greeting,greeting:15
+f4f,spam,spam:11
+"make money online, no investment asap",spam,spam:13
+reply kab karoge please 😭,follow_up,follow_up:12
+where is my order 17919,order_status,order_status:01
+how much for the black anarkali,price,price:06
+STILL WAITING FOR A REPLY PLEASE,follow_up,follow_up:04
+QUALIYT IS NOT LIKE THE PICTURES. NOT HAPPY PLS,complaint,complaint:03
+PARCEL STUCK AT INDORE HUB,order_status,order_status:12
+Track my order pls thanks,order_status,order_status:08
+Send this to 10 friends 🙏,spam,spam:12
+"hey cheated, pasia gaya",complaint,complaint:15
+Sir kitne din mein aayega Dehradun mein plz,cod_shipping,cod_shipping:09
+how much for the black saree,price,price:06
+HELLO YOU WON A GIVEAWAY! CLAIM NOW BHAI,spam,spam:03
+"we are a marketing agency, can we talk yaar 😍",collab,collab:11
+where is my order 73352,order_status,order_status:01
+obsessed with your stuff ji,greeting,greeting:14
+"FAKE PRODUCT, NOT WHAT WAS SHOWN",complaint,complaint:08
+repyl asap,follow_up,follow_up:05
+Any update please,follow_up,follow_up:14
+"this is so bad, the stitching came off asap 🥺",complaint,complaint:04
+HEY DO YOU DELIVER TO PINCODE 248001 BHAI,cod_shipping,cod_shipping:11
+stock hai please ❤️,availability,availability:04
+"hello your account will be suspended, verify here",spam,spam:07
+Pnig ❤️,follow_up,follow_up:13
+hey price batao 🥺,price,price:17
+mam quality is not like the pictures. not happy,complaint,complaint:03
+What does the mint green one cost,price,price:18
+"cheated, paisa gaya pls",complaint,complaint:15
+"make money online, no investment 🔥",spam,spam:13
+Hey worst experience ever,complaint,complaint:05
+price of hoodie in xl ji 🥺,price,price:20
+"fkae product, not what was shown bhai 🙏",complaint,complaint:08
+hoodie kitna ka hai ❤️,price,price:07
+dehradun delivery possible,cod_shipping,cod_shipping:13
+hello interested in a paid promotion,collab,collab:03
+exchange ka process batao,return_exchange,return_exchange:09
+amaizng work,greeting,greeting:07
+mam Haldwani delivery possible?,cod_shipping,cod_shipping:13
+"HI RECEIVED A DAMAGED DENIM JACKET, VERY DISAPPOINTED 🥺",complaint,complaint:00
+"VERY POOR QUALITY, WASTE OF MONEY",complaint,complaint:09
+"returning the tote bag, how",return_exchange,return_exchange:14
+how do i return the kurta pls,return_exchange,return_exchange:00
+brand ambassador program hai asap ❤️,collab,collab:10
+F4f,spam,spam:11
+hello what does the white one cost,price,price:18
+hi when is the next drop,availability,availability:09
+interested in a paid promotion?,collab,collab:03
+track my order pls,order_status,order_status:08
+Mam the otte bag is torn,complaint,complaint:06
+Hey sling bag available hai,availability,availability:01
+Anyone there asap,follow_up,follow_up:03
+why no reply,follow_up,follow_up:07
+stock hai?,availability,availability:04
+hey how do i return the oversized tee,return_exchange,return_exchange:00
+hello,greeting,greeting:01
+"WE ARE A MARKETING AGENCY, CAN WE TALK",collab,collab:11
+Hello what does the white one cost bhai,price,price:18
+PRICE PLS,price,price:01
+How much is this one,price,price:16
+do you deliver to pincode 248001,cod_shipping,cod_shipping:11
+Waiting,follow_up,follow_up:09
+Thank you,greeting,greeting:15
+Interested in a paid promotion???,collab,collab:03
+"it's been a week, where is my parcel thanks",order_status,order_status:06
+Cod option hai pls,cod_shipping,cod_shipping:07
+Hi how many days for refund,return_exchange,return_exchange:06
+Sir reporting your page if no reply 🙏,complaint,complaint:14
+mustard colour milega,availability,availability:08
+ANY UPDATE,follow_up,follow_up:14
+get 10k followers in 1 day!! click link in bio 🥺,spam,spam:00
+can you share your collab terms thanks 🙏,collab,collab:12
+Hey there,greeting,greeting:10
+CAN I STILL ORDER THE SLING BAG YAAR,availability,availability:11
+"Increase your reach, 100% real followers",spam,spam:09
+Price of anarkali in XS ji,price,price:20
+Reporting your page if no reply 🥺,complaint,complaint:14
+Hello rate?,price,price:10
+"It's been a week, where is my parcel 🔥",order_status,order_status:06
+order status for 17919?,order_status,order_status:07
+are you open to ugc content yaar,collab,collab:09
+Namaste 😭,greeting,greeting:09
+REFUND STATUS FOR ORDER 33757,return_exchange,return_exchange:02
+pr package bhej sakte ho bhai,collab,collab:02
+Nice yaar,greeting,greeting:13
+stock hai ji 😍,availability,availability:04
+Do you deliver to pincode 248001 thanks ❤️,cod_shipping,cod_shipping:11
+anyone there pls,follow_up,follow_up:03
+The oversized tee is torn,complaint,complaint:06
+"Fake product, not what was shown bhai",complaint,complaint:08
+get 10k followers in 1 day!! click link in bio thanks,spam,spam:00
+HOW MUCH IS THIS ONE,price,price:16
+erply kab karoge,follow_up,follow_up:12
+mam return pickup kab hoga,return_exchange,return_exchange:10
+hwen will the maroon one restock,availability,availability:02
+OUT OF STOCK KYU DIKHA RAHA HAI,availability,availability:13
+hii buy followers cheap,spam,spam:06
+How do i return the denim jacket 😭,return_exchange,return_exchange:00
+"make money online, no investment",spam,spam:13
+anyone there,follow_up,follow_up:03
+HII WOULD LOVE TO FEATURE YOUR JHUMKAS IN MY REEL PLEASE,collab,collab:08
+BRAND AMBASSADOR PROGRAM HAI,collab,collab:10
+still waiting for a reply,follow_up,follow_up:04
+hii bust szie for xxl,size,size:09
+bhai relpy karo ❤️,follow_up,follow_up:15
+order status for 81271?,order_status,order_status:07
+parcel stuck at Chandigarh hub,order_status,order_status:12
+bahut ganda quality hai yaar 🥺,complaint,complaint:12
+price of dupatta in xxl,price,price:20
+mint green colour milega? ❤️,availability,availability:08
+ji pls,follow_up,follow_up:08
+Namaste,greeting,greeting:09
+mam Lucknow delivery possible,cod_shipping,cod_shipping:13
+hii how much for the olive rcop top,price,price:06
+Restock kab hoga yaar,availability,availability:10
+Still waiting for a reply,follow_up,follow_up:04
+kitne din mein aayega Indore mein ji,cod_shipping,cod_shipping:09
+"we are a marketing agency, can we talk ❤️",collab,collab:11
+Sir buy followers hceap,spam,spam:06
+reply,follow_up,follow_up:05
+Hii dm price,price,price:12
+kya s mein milega,size,size:08
+shipped or not? order 17919,order_status,order_status:10
+"Very poor quality, waste of money plz",complaint,complaint:09
+YOU WON A GIVEAWAY! CLAIM NOW BHAI 😍,spam,spam:03
+Want to swap for navy thanks,return_exchange,return_exchange:12
+Mam size chart pls,size,size:02
+beautiful collection,greeting,greeting:06
+cod available,cod_shipping,cod_shipping:00
+track my order pls asap,order_status,order_status:08
+hii pr package bhej sakte ho,collab,collab:02
+when will the white one restock 🥺,availability,availability:02
+hi did my order 25838 go out today yaar,order_status,order_status:14
+mam the anarkali is torn,complaint,complaint:06
+i want to complain about my order 25838 🥺,complaint,complaint:13
+"increase your reach, 100% real followers yaar",spam,spam:09
+what does the mint green one cost yaar,price,price:18
+mam return pickup kab hoga plz ❤️,return_exchange,return_exchange:10
+DO YOU EDLIVER TO HALDWANI,cod_shipping,cod_shipping:02
+exchange ka porcess batao pls,return_exchange,return_exchange:09
+hii xxl size hai???,size,size:01
+reporting your page if no reply,complaint,complaint:14
+sir price pls,price,price:01
+COD OPTION HAI?,cod_shipping,cod_shipping:07
+hii buy folloewrs cheap 🥺,spam,spam:06
+can i still order the dupatta,availability,availability:11
+BHAI REPLY KARO,follow_up,follow_up:15
+"mam what size should i take, height 5'4 pls",size,size:06
+mera order kab tak aayega asap,order_status,order_status:09
+Kausna size lu 😭,size,size:15
+is it true to size?,size,size:07
+let's collaborate ji 🥺,collab,collab:04
+worst experience ever thanks,complaint,complaint:05
+hi you won a giveaway! claim now,spam,spam:03
+can you share your collab terms 😍,collab,collab:12

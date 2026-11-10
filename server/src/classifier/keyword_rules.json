@@ -1,0 +1,16 @@
+{
+  "description": "Hand-written keyword baseline. Rules are checked in order; the first intent with a matching pattern wins. Patterns run on preprocessed text (lowercase, digits -> 0). Shared by ml/train.py (evaluation) and server/src/classifier (fallback).",
+  "rules": [
+    { "intent": "spam", "patterns": ["followers", "giveaway", "click (the )?link", "crypto", "earn 0", "make money", "f4f", "follow for follow", "verify here", "suspended", "singles"] },
+    { "intent": "complaint", "patterns": ["damaged", "broken", "torn", "wrong (colou?r|size|item|product)", "worst", "(poor|bad|ganda|bekar) quality", "disappoint", "fake", "cheat", "faded", "missing", "complain", "not happy", "waste", "kharab", "report"] },
+    { "intent": "collab", "patterns": ["collab", "influencer", "creator", "promotion", "pr package", "ambassador", "affiliate", "ugc", "media kit"] },
+    { "intent": "return_exchange", "patterns": ["return", "refund", "exchange", "swap"] },
+    { "intent": "order_status", "patterns": ["order", "track", "parcel", "dispatch", "shipped", "arrived"] },
+    { "intent": "cod_shipping", "patterns": ["\\bcod\\b", "cash on delivery", "deliver", "shipping", "\\bship\\b", "pincode", "payment"] },
+    { "intent": "size", "patterns": ["size", "\\b(xs|xl|xxl)\\b", "\\bfit", "waist", "bust", "length"] },
+    { "intent": "availability", "patterns": ["stock", "availab", "sold out", "milega", "\\bdrop\\b"] },
+    { "intent": "price", "patterns": ["price", "\\bpp\\b", "kitn", "\\brate\\b", "cost", "how much", "discount"] },
+    { "intent": "follow_up", "patterns": ["^\\W*\\?+\\W*$", "reply", "anyone", "waiting", "answer", "any update", "^ping$"] },
+    { "intent": "greeting", "patterns": ["^(hi+|hello|hey|namaste|good morning)\\b", "love", "beautiful", "amazing", "pretty", "cute", "nice", "wow", "thank"] }
+  ]
+}

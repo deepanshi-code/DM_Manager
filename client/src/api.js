@@ -11,9 +11,10 @@ async function request(path, options = {}) {
 export const api = {
   meta: () => request('/meta'),
   stats: () => request('/stats'),
-  list: ({ filter, q }) => {
+  list: ({ filter, q, intent }) => {
     const params = new URLSearchParams({ filter });
     if (q) params.set('q', q);
+    if (intent) params.set('intent', intent);
     return request(`/conversations?${params}`);
   },
   get: (id) => request(`/conversations/${id}`),
@@ -22,6 +23,8 @@ export const api = {
     request(`/conversations/${id}/reply`, { method: 'POST', body: JSON.stringify({ text, agent }) }),
   setStatus: (id, status, agent) =>
     request(`/conversations/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status, agent }) }),
+  correctIntent: (messageId, intent, agent) =>
+    request(`/messages/${messageId}/intent`, { method: 'PATCH', body: JSON.stringify({ intent, agent }) }),
   assign: (id, assignee) =>
     request(`/conversations/${id}/assignee`, { method: 'PATCH', body: JSON.stringify({ assignee }) }),
 };

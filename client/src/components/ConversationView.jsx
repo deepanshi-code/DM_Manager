@@ -1,5 +1,24 @@
 import { useEffect, useRef, useState } from 'react';
-import { clock, duration, since, STATUS_LABEL } from '../format.js';
+import { clock, duration, intentLabel, since, STATUS_LABEL } from '../format.js';
+
+/** Predicted label on a customer message; the agent can correct it in place. */
+function IntentTag({ message: m, intents, onCorrect }) {
+  const effective = m.intent_corrected ?? m.intent ?? 'unclassified';
+  const corrected = m.intent_corrected != null;
+  const title = corrected
+    ? `Corrected by ${m.intent_corrected_by ?? 'agent'} (model said: ${intentLabel(m.intent)})`
+    : `Predicted by ${m.intent_source ?? 'classifier'}${m.intent_confidence != null ? `, confidence ${Math.round(m.intent_confidence * 100)}%` : ''}. Change it if it's wrong.`;
+  return (
+    <label className={`intent-tag ${corrected ? 'corrected' : ''} ${m.intent_low_confidence && !corrected ? 'unsure' : ''}`} title={title}>
+      <span className="sr-only">Message type</span>
+      <select value={effective} onChange={(e) => onCorrect(m.id, e.target.value).catch(() => {})}>
+        {!intents.includes(effective) && <option value={effective}>{intentLabel(effective)}</option>}
+        {intents.map((i) => <option key={i} value={i}>{intentLabel(i)}</option>)}
+      </select>
+      {corrected ? <span aria-hidden="true">✓</span> : m.intent_low_confidence ? <span aria-hidden="true">?</span> : null}
+    </label>
+  );
+}
 
 const ACTION_LABEL = {
   OPEN: 'Reopen',
@@ -7,7 +26,9 @@ const ACTION_LABEL = {
   RESOLVED: 'Resolve',
 };
 
-export default function ConversationView({ conversation: c, agents, now, onReply, onStatus, onAssign }) {
+export default function ConversationView({
+  conversation: c, agents, intents, now, onReply, onStatus, onAssign, onCorrectIntent,
+}) {
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const bottomRef = useRef(null);
@@ -54,6 +75,9 @@ export default function ConversationView({ conversation: c, agents, now, onReply
         <div>
           <h2>@{c.username ?? c.ig_user_id}</h2>
           <div className="view-sub">
+            {c.priority === 'URGENT' && <span className="chip urgent">Urgent</span>}
+            {c.customer_chasing && <span className="chip warn">Customer is chasing</span>}
+            <span className={`chip intent intent-${c.intent ?? 'unclassified'}`}>{intentLabel(c.intent)}</span>
             <span className={`chip status-${c.status}`}>{STATUS_LABEL[c.status]}</span>
             {c.is_overdue && <span className="chip danger">Overdue</span>}
             {c.needs_reply_since && <span className="chip warn">Waiting {since(c.needs_reply_since, now)}</span>}
@@ -84,6 +108,7 @@ export default function ConversationView({ conversation: c, agents, now, onReply
           <li key={m.id} className={`bubble ${m.direction === 'INBOUND' ? 'in' : 'out'} ${m.delivery_status.toLowerCase()}`}>
             <div className="bubble-text">{m.body}</div>
             <div className="bubble-meta">
+              {m.direction === 'INBOUND' && <IntentTag message={m} intents={intents} onCorrect={onCorrectIntent} />}
               {clock(m.sent_at)}
               {m.direction === 'OUTBOUND' && (
                 <>

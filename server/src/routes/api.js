@@ -1,8 +1,12 @@
 import express from 'express';
 import { config } from '../config.js';
+import { INTENTS } from '../intents.js';
+import { modelInfo } from '../classifier/index.js';
 import {
   HttpError,
   assignConversation,
+  correctIntent,
+  exportLabelsCsv,
   getConversation,
   getStats,
   listConversations,
@@ -25,6 +29,8 @@ apiRouter.get('/meta', (req, res) => {
     slaSeconds: config.slaSeconds,
     replyWindowHours: config.replyWindowHours,
     sender: config.sender,
+    intents: INTENTS,
+    classifier: modelInfo(),
   });
 });
 
@@ -38,8 +44,22 @@ apiRouter.get('/conversations', async (req, res) => {
       filter: req.query.filter || 'NEEDS_REPLY',
       search: req.query.q,
       assignee: req.query.assignee,
+      intent: req.query.intent,
     }),
   );
+});
+
+apiRouter.patch('/messages/:id/intent', async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) throw new HttpError(400, 'Invalid message id');
+  res.json(await correctIntent(id, req.body?.intent, req.body?.agent));
+});
+
+apiRouter.get('/labels.csv', async (req, res) => {
+  const csv = await exportLabelsCsv({ correctedOnly: req.query.corrected === '1' });
+  res.set('content-type', 'text/csv; charset=utf-8');
+  res.set('content-disposition', 'attachment; filename="dm-labels.csv"');
+  res.send(csv);
 });
 
 apiRouter.get('/conversations/:id', async (req, res) => {
