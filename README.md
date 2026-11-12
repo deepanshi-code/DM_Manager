@@ -108,6 +108,17 @@ DM ─▶ classify(text) ─────────────▶ messages.int
 
 **Evaluation (synthetic data, details and caveats in [ml/reports/phase2_evaluation.md](ml/reports/phase2_evaluation.md)):** the server's decision policy reaches 76% accuracy and 74% macro-F1 on held-out phrasings. However, complaint recall is only 22%, and the keyword rules it uses are leaked. Real, anonymised data is needed for a trustworthy number. See [ml/README.md](ml/README.md).
 
+## Dashboard UX for high-volume inboxes
+
+- **Work through the queue, not around it.** After you send a reply or resolve a chat, the next conversation opens automatically. You can turn this off under the reply box; the setting is remembered.
+- **Keyboard:** `j`/`k` next/previous, `r` reply, `Ctrl+Enter` send, `e` resolve, `/` search, `Esc` back, `?` show all shortcuts.
+- **Undo** after resolving. Reopening restores the reply timer, the overdue flag and the "chasing" flag, so an accidental resolve can't make a customer disappear (this is covered by a test).
+- **Why is this chat on top?** Each row shows one waiting time (red when overdue) plus Overdue / Chasing / message-type tags. The status tag is hidden in action views, where every row needs a reply anyway.
+- **Unsent drafts are kept per conversation** while switching chats. A failed delivery has a "Try again" link that puts the text back in the reply box.
+- **Honest states:** a loading skeleton instead of a false "Inbox zero", and empty states that say what an empty view means.
+- **Phone layout:** the inbox list and the conversation show one at a time, with a back link, and the page never scrolls sideways. On tablets the less important stats are hidden.
+- **Dark mode** follows the system setting. The tab title shows how many customers are waiting, e.g. "(38) DM Manager".
+
 ## Metrics the dashboard already measures
 - Conversations needing a reply, overdue conversations, and how long the oldest one has waited
 - Median reply time (per customer message turn)

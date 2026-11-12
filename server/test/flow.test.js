@@ -238,3 +238,38 @@ test('intent filter and backfill of unlabelled messages', async () => {
   assert.ok(listed.some((c) => c.id === conversationId));
   await assert.rejects(listConversations({ intent: 'banana' }), { status: 400 });
 });
+
+test('URGENT filter lists only urgent chats that still need a reply', async () => {
+  const urgent = await ingestInbound({ igUserId: uid(), mid: mid(), text: 'received damaged, worst quality' });
+  const normal = await ingestInbound({ igUserId: uid(), mid: mid(), text: 'cod available?' });
+  const ids = (await listConversations({ filter: 'URGENT' })).map((c) => c.id);
+  assert.ok(ids.includes(urgent.conversationId));
+  assert.ok(!ids.includes(normal.conversationId));
+  await updateStatus(urgent.conversationId, 'RESOLVED');
+  assert.ok(!(await listConversations({ filter: 'URGENT' })).some((c) => c.id === urgent.conversationId));
+});
+
+test('reopening a resolved chat (Undo) brings back its reply timer and overdue flag', async () => {
+  const igUserId = uid();
+  const twoHoursAgo = Date.now() - 2 * 3600_000;
+  const { conversationId } = await ingestInbound({ igUserId, mid: mid(), text: 'price?', timestamp: twoHoursAgo });
+  await ingestInbound({ igUserId, mid: mid(), text: 'hello??', timestamp: twoHoursAgo + 60_000 });
+  await markOverdue(new Date(), 3600);
+  await updateStatus(conversationId, 'RESOLVED');
+  let conv = await getConversation(conversationId);
+  assert.equal(conv.needs_reply_since, null);
+
+  await updateStatus(conversationId, 'OPEN');
+  conv = await getConversation(conversationId);
+  assert.equal(new Date(conv.needs_reply_since).getTime(), twoHoursAgo, 'oldest unanswered message again');
+  assert.equal(conv.is_overdue, true);
+  assert.equal(conv.customer_chasing, true);
+
+  // After a real reply, reopening finds nothing unanswered.
+  await sendReply(conversationId, 'It is ₹799', 'Asha');
+  await updateStatus(conversationId, 'RESOLVED');
+  await updateStatus(conversationId, 'OPEN');
+  conv = await getConversation(conversationId);
+  assert.equal(conv.needs_reply_since, null);
+  assert.equal(conv.is_overdue, false);
+});

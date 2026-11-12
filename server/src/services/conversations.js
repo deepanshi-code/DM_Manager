@@ -233,6 +233,26 @@ export async function updateStatus(conversationId, to, actor) {
         WHERE id = $1`,
       [conversationId, to, clearTimer],
     );
+    if (to === STATUS.OPEN) {
+      // Reopening (e.g. "Undo" after resolving by mistake) must bring back the reply timer:
+      // the oldest customer message after our last delivered reply is unanswered again.
+      await q.query(
+        `UPDATE conversations c SET
+            needs_reply_since = u.since,
+            is_overdue = COALESCE(u.since <= now() - make_interval(secs => $2), false)
+           FROM (
+             SELECT min(m.sent_at) AS since
+               FROM messages m
+              WHERE m.conversation_id = $1 AND m.direction = 'INBOUND'
+                AND m.sent_at > COALESCE(
+                  (SELECT max(o.sent_at) FROM messages o
+                    WHERE o.conversation_id = $1 AND o.direction = 'OUTBOUND' AND o.delivery_status = 'SENT'),
+                  '-infinity'::timestamptz)
+           ) u
+          WHERE c.id = $1`,
+        [conversationId, config.slaSeconds],
+      );
+    }
     await logStatus(q, conversationId, conv.status, to, actor ?? 'agent', 'manual');
     await refreshConversationIntent(q, conversationId);
     return { status: to };
@@ -265,7 +285,7 @@ export async function markRead(conversationId, actor) {
   });
 }
 
-const FILTERS = ['ALL', 'NEEDS_REPLY', 'OVERDUE', ...ALL_STATUSES];
+const FILTERS = ['ALL', 'NEEDS_REPLY', 'OVERDUE', 'URGENT', ...ALL_STATUSES];
 
 /**
  * Inbox ordering is a design decision:
@@ -296,12 +316,14 @@ export async function listConversations({ filter = 'NEEDS_REPLY', search, assign
                               OR c.last_message_preview ILIKE '%' || $4 || '%')
         AND ($5::text IS NULL OR c.assignee = $5)
         AND ($6::text IS NULL OR COALESCE(c.intent, 'unclassified') = $6)
+        AND ($7::boolean IS NOT TRUE OR (c.needs_reply_since IS NOT NULL AND c.priority = 'URGENT'))
       ORDER BY (c.is_overdue AND c.priority <> 'LOW') DESC,
                CASE c.priority WHEN 'URGENT' THEN 0 WHEN 'NORMAL' THEN 1 ELSE 2 END,
                c.needs_reply_since ASC NULLS LAST,
                c.last_message_at DESC
       LIMIT 200`,
-    [status, filter === 'OVERDUE', filter === 'NEEDS_REPLY', search || null, assignee || null, intent || null],
+    [status, filter === 'OVERDUE', filter === 'NEEDS_REPLY', search || null, assignee || null, intent || null,
+      filter === 'URGENT'],
   );
   return rows;
 }

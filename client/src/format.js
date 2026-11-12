@@ -11,6 +11,16 @@ export function duration(seconds) {
 
 export const since = (date, now = Date.now()) => (date ? duration((now - new Date(date)) / 1000) : '—');
 
+/** "Today", "Yesterday" or a short date, for separators between messages. */
+export function dayLabel(date, now = Date.now()) {
+  const d = new Date(date);
+  const start = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const days = Math.round((start(new Date(now)) - start(d)) / 86_400_000);
+  if (days === 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  return d.toLocaleDateString([], { day: 'numeric', month: 'short', year: days > 300 ? 'numeric' : undefined });
+}
+
 export function clock(date) {
   return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
@@ -31,6 +41,24 @@ export const INTENT_LABEL = {
 };
 
 export const intentLabel = (intent) => INTENT_LABEL[intent ?? 'unclassified'] ?? intent;
+
+// Each message type gets an emoji and a colour (hue) so the inbox can be scanned at a glance.
+// The text label is always shown too, so colour is never the only signal.
+export const INTENT_META = {
+  price: { emoji: '💰', hue: 145 },
+  size: { emoji: '📏', hue: 200 },
+  availability: { emoji: '🛍️', hue: 265 },
+  cod_shipping: { emoji: '🚚', hue: 28 },
+  order_status: { emoji: '📦', hue: 38 },
+  return_exchange: { emoji: '🔁', hue: 185 },
+  complaint: { emoji: '⚠️', hue: 350 },
+  collab: { emoji: '🤝', hue: 300 },
+  spam: { emoji: '🚫', hue: 220, muted: true },
+  greeting: { emoji: '👋', hue: 50 },
+  follow_up: { emoji: '🔔', hue: 15 },
+  unclassified: { emoji: '❔', hue: 230, muted: true },
+};
+export const intentMeta = (intent) => INTENT_META[intent ?? 'unclassified'] ?? INTENT_META.unclassified;
 
 export const STATUS_LABEL = {
   NEW: 'New',
