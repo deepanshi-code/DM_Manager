@@ -5,6 +5,8 @@ const TABS = [
   { key: 'OVERDUE', label: 'Overdue', tone: 'danger' },
 ];
 const MORE = [
+  { key: 'MINE', label: 'Assigned to me' },
+  { key: 'FOLLOW_UP', label: 'Follow-ups due' },
   { key: 'ALL', label: 'All chats', countKey: 'total' },
   { key: 'NEW', label: 'New' },
   { key: 'OPEN', label: 'Open' },

@@ -8,6 +8,11 @@ import Toast from './components/Toast.jsx';
 import ShortcutsHelp from './components/ShortcutsHelp.jsx';
 import Icon from './components/Icon.jsx';
 import Avatar from './components/Avatar.jsx';
+import Login from './components/Login.jsx';
+import SavedReplies from './components/SavedReplies.jsx';
+import Rail from './components/Rail.jsx';
+import DetailsPanel from './components/DetailsPanel.jsx';
+import BulkBar from './components/BulkBar.jsx';
 import { since } from './format.js';
 
 // Refresh by polling every few seconds: simple and good enough for a small team.
@@ -35,6 +40,8 @@ const isTyping = (el) =>
   el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable);
 
 export default function App() {
+  // null = still checking; { required, agent } once the server has answered.
+  const [session, setSession] = useState(null);
   const [meta, setMeta] = useState(null);
   const [agent, setAgent] = useState(() => readPref('dm.agent', ''));
   const [filter, setFilter] = useState('NEEDS_REPLY'); // default view = what needs action
@@ -50,6 +57,11 @@ export default function App() {
   const [autoAdvance, setAutoAdvance] = useState(() => readPref('dm.autoAdvance', true));
   const [toast, setToast] = useState(null);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [savedOpen, setSavedOpen] = useState(false);
+  const [alertsOn, setAlertsOn] = useState(() => readPref('dm.alerts', false));
+  const [detailsOpen, setDetailsOpen] = useState(() => readPref('dm.details', typeof window !== 'undefined' && window.innerWidth >= 1280));
+  const [checked, setChecked] = useState(() => new Set()); // conversations selected for a bulk action
+  const lastCounts = useRef(null); // previous overdue/urgent counts, to alert only on increases
 
   const requestSeq = useRef(0);
   const listRef = useRef(list);
@@ -57,23 +69,76 @@ export default function App() {
   const composerRef = useRef(null);
   const drafts = useRef(new Map());
 
+  // Signed in, or the server runs without login (AUTH=off demo mode).
+  const ready = Boolean(session && (!session.required || session.agent));
+
   useEffect(() => {
+    api.me().then(setSession).catch(() => setSession({ required: false, agent: null }));
+  }, []);
+
+  // Any 401 means the session expired or was revoked: go back to the login screen.
+  const signedOut = useCallback(() => setSession((s) => ({ required: s?.required ?? true, agent: null })), []);
+  const isAuthError = (e) => e?.status === 401;
+
+  useEffect(() => {
+    if (!ready) return;
     api.meta().then((m) => {
       setMeta(m);
-      setAgent((current) => (m.agents.includes(current) ? current : m.agents[0] ?? ''));
-    }).catch((e) => setError(e.message));
-  }, []);
+      const me = m.auth?.agent;
+      setAgent((current) => me ?? (m.agents.includes(current) ? current : m.agents[0] ?? ''));
+    }).catch((e) => (isAuthError(e) ? signedOut() : setError(e.message)));
+  }, [ready, signedOut]);
 
   useEffect(() => writePref('dm.agent', agent), [agent]);
   useEffect(() => writePref('dm.autoAdvance', autoAdvance), [autoAdvance]);
+  useEffect(() => writePref('dm.alerts', alertsOn), [alertsOn]);
+  useEffect(() => writePref('dm.details', detailsOpen), [detailsOpen]);
+  // Changing view clears the selection, so a bulk action never hits chats you can't see.
+  useEffect(() => setChecked(new Set()), [filter, intent, search]);
+
+  // Overdue alerts: when more chats become overdue or urgent, tell the agent. A desktop
+  // notification if this tab is in the background (and allowed), otherwise a toast.
+  useEffect(() => {
+    const c = stats?.counts;
+    if (!c) return;
+    const prev = lastCounts.current;
+    lastCounts.current = { overdue: c.OVERDUE, urgent: c.URGENT ?? 0, followUp: c.FOLLOW_UP ?? 0 };
+    if (!alertsOn || !prev) return; // never alert for what was already there when the page opened
+    const moreOverdue = c.OVERDUE - prev.overdue;
+    const moreUrgent = (c.URGENT ?? 0) - prev.urgent;
+    const parts = [];
+    if (moreOverdue > 0) parts.push(`${moreOverdue} chat${moreOverdue === 1 ? '' : 's'} just went overdue`);
+    if (moreUrgent > 0) parts.push(`${moreUrgent} new urgent chat${moreUrgent === 1 ? '' : 's'}`);
+    const moreFollowUps = (c.FOLLOW_UP ?? 0) - (prev.followUp ?? 0);
+    if (moreFollowUps > 0) parts.push(`${moreFollowUps} follow-up${moreFollowUps === 1 ? ' is' : 's are'} due`);
+    if (!parts.length) return;
+    const message = parts.join(' · ');
+    if (document.hidden && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      const n = new Notification('DM Manager', { body: message, tag: 'dm-overdue' });
+      n.onclick = () => { window.focus(); setFilter(moreOverdue > 0 ? 'OVERDUE' : 'URGENT'); n.close(); };
+    } else {
+      setToast({ id: Date.now(), message });
+    }
+  }, [stats, alertsOn]);
+
+  async function toggleAlerts() {
+    if (alertsOn) return setAlertsOn(false);
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      await Notification.requestPermission().catch(() => {});
+    }
+    setAlertsOn(true);
+    const desktop = typeof Notification !== 'undefined' && Notification.permission === 'granted';
+    setToast({ id: Date.now(), message: desktop ? 'Alerts on: you will be notified about overdue and urgent chats' : 'Alerts on (in this tab only: desktop notifications are blocked)' });
+  }
 
   const refresh = useCallback(async () => {
+    if (!ready) return;
     const seq = ++requestSeq.current;
     try {
       const [l, s, d] = await Promise.all([
-        api.list({ filter, q: search, intent }),
-        api.stats(),
-        selectedId ? api.get(selectedId) : Promise.resolve(null),
+        api.list({ filter, q: search, intent, agent }),
+        api.stats(agent),
+        selectedId ? api.get(selectedId, agent) : Promise.resolve(null),
       ]);
       if (seq !== requestSeq.current) return; // a newer request started (filter changed): drop this one
       setList(l);
@@ -83,9 +148,10 @@ export default function App() {
       setLoaded(true);
       setError('');
     } catch (e) {
-      if (seq === requestSeq.current) setError(`${e.message}. Is the server running?`);
+      if (isAuthError(e)) signedOut();
+      else if (seq === requestSeq.current) setError(`${e.message}. Is the server running?`);
     }
-  }, [filter, search, intent, selectedId]);
+  }, [ready, filter, search, intent, selectedId, signedOut, agent]);
 
   useEffect(() => {
     refresh();
@@ -112,7 +178,7 @@ export default function App() {
     }
     try {
       await api.read(id, agent);
-      setDetail(await api.get(id));
+      setDetail(await api.get(id, agent));
     } catch (e) {
       setError(e.message);
     }
@@ -150,7 +216,8 @@ export default function App() {
     try {
       return await fn();
     } catch (e) {
-      setError(e.message);
+      if (isAuthError(e)) signedOut();
+      else setError(e.message);
       throw e;
     } finally {
       refresh();
@@ -160,10 +227,10 @@ export default function App() {
   const who = detail ? (detail.username ?? detail.ig_user_id) : 'customer';
 
   const handlers = {
-    reply: (text) => {
+    reply: (text, savedReplyId) => {
       const id = selectedId;
       const name = who;
-      return run(() => api.reply(id, text, agent)).then(() => finished(id, `Reply sent to ${name}`));
+      return run(() => api.reply(id, text, agent, savedReplyId ?? undefined)).then(() => finished(id, `Reply sent to ${name}`));
     },
     status: (status) => {
       const id = selectedId;
@@ -179,7 +246,37 @@ export default function App() {
     },
     assign: (assignee) => run(() => api.assign(selectedId, assignee)),
     correctIntent: (messageId, value) => run(() => api.correctIntent(messageId, value, agent)),
+    addNote: (body) => run(() => api.addNote(selectedId, body, agent)),
+    deleteNote: (noteId) => run(() => api.deleteNote(noteId, agent)),
+    setReminder: (at) => {
+      const name = who;
+      return run(() => api.setReminder(selectedId, at, agent)).then(() => {
+        setToast({ id: Date.now(), message: at ? `Reminder set: follow up with ${name} ${new Date(at).toLocaleString(undefined, { weekday: 'short', hour: '2-digit', minute: '2-digit' })}` : 'Reminder cleared' });
+      });
+    },
+    assignToMe: () => {
+      if (!selectedId || !agent) return Promise.resolve();
+      return run(() => api.assign(selectedId, agent)).then(() => setToast({ id: Date.now(), message: `Assigned to you` }));
+    },
+    bulk: (action, assignee) => {
+      const ids = [...checked];
+      return run(() => api.bulk(ids, action, agent, assignee)).then((r) => {
+        setChecked(new Set());
+        const verb = action === 'assign' ? (assignee ? `Assigned to ${assignee}` : 'Unassigned') : action === 'spam' ? 'Marked as spam' : 'Resolved';
+        setToast({ id: Date.now(), message: `${verb}: ${r.done} chat${r.done === 1 ? '' : 's'}${r.failed ? ` (${r.failed} failed)` : ''}` });
+        if (ids.includes(selectedId) && action !== 'assign') open(null);
+      });
+    },
   };
+
+  function toggleCheck(id) {
+    setChecked((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
 
   // Keyboard shortcuts for agents handling hundreds of chats a day.
   useEffect(() => {
@@ -187,14 +284,23 @@ export default function App() {
       if (e.key === 'Escape') {
         if (helpOpen) setHelpOpen(false);
         else if (isTyping(document.activeElement)) document.activeElement.blur();
+        else if (checked.size) setChecked(new Set());
         else if (selectedId) open(null);
         return;
       }
       if (isTyping(document.activeElement) || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (savedOpen || document.querySelector('[role="dialog"]')) return; // a dialog has the keyboard
       const key = e.key;
       if (key === 'j' || key === 'ArrowDown') { e.preventDefault(); move(1); }
       else if (key === 'k' || key === 'ArrowUp') { e.preventDefault(); move(-1); }
       else if (key === 'r' && detail) { e.preventDefault(); composerRef.current?.focus(); }
+      else if (key === 'a' && detail) { e.preventDefault(); handlers.assignToMe().catch(() => {}); }
+      else if (key === 'n' && detail) {
+        e.preventDefault();
+        setDetailsOpen(true);
+        requestAnimationFrame(() => document.getElementById('note-box')?.focus());
+      }
+      else if (key === 'x' && selectedId) { e.preventDefault(); toggleCheck(selectedId); }
       else if (key === 'e' && detail?.allowedTransitions.includes('RESOLVED')) { e.preventDefault(); handlers.status('RESOLVED').catch(() => {}); }
       else if (key === '/') { e.preventDefault(); document.getElementById('inbox-search')?.focus(); }
       else if (key === '?') { e.preventDefault(); setHelpOpen((v) => !v); }
@@ -206,27 +312,81 @@ export default function App() {
   const counts = stats?.counts;
   const showThread = detail && detail.id === selectedId;
 
+  async function signOut() {
+    await api.logout().catch(() => {});
+    drafts.current.clear();
+    setSelectedId(null);
+    setDetail(null);
+    setList([]);
+    setLoaded(false);
+    setSession({ required: true, agent: null });
+  }
+
+  if (!session) return null; // checking the session: a blank frame for a few ms beats a flash of the login form
+  if (!ready) return <Login onSignedIn={(name) => setSession({ required: true, agent: name })} />;
+
   return (
     <div className={`app ${selectedId ? 'show-thread' : 'show-inbox'}`}>
+      <Rail
+        view={selectedId ? 'inbox' : 'overview'}
+        counts={counts}
+        agent={agent}
+        agents={meta?.agents ?? []}
+        loginRequired={session.required}
+        alertsOn={alertsOn}
+        onInbox={() => (selectedId ? document.getElementById('inbox-search')?.focus() : move(1))}
+        onOverview={() => open(null)}
+        onSaved={() => setSavedOpen(true)}
+        onAlerts={toggleAlerts}
+        onHelp={() => setHelpOpen(true)}
+        onAgent={setAgent}
+        onSignOut={signOut}
+      />
       <aside className="inbox">
         <header className="inbox-header">
           <div className="inbox-top">
             <div className="brand">
-              <span className="brand-mark" aria-hidden="true"><Icon name="send" size={16} strokeWidth={2} /></span>
+              <span className="brand-mark mobile-only" aria-hidden="true"><Icon name="send" size={14} strokeWidth={2} /></span>
               <h1>Inbox</h1>
             </div>
-            <div className="inbox-top-actions">
+            {/* On phones there is no rail, so its actions live here. */}
+            <div className="inbox-top-actions mobile-only">
+              <button
+                type="button"
+                className={`icon-btn ${alertsOn ? 'on' : ''}`}
+                onClick={toggleAlerts}
+                aria-pressed={alertsOn}
+                aria-label="Overdue alerts"
+                title={alertsOn ? 'Overdue alerts are on' : 'Turn on overdue alerts'}
+              >
+                <Icon name="bell" size={18} />
+              </button>
+              <button type="button" className="icon-btn" onClick={() => setSavedOpen(true)} aria-label="Saved replies" title="Saved replies">
+                <Icon name="zap" size={18} />
+              </button>
               <button type="button" className="icon-btn" onClick={() => setHelpOpen(true)} aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)">
                 <Icon name="keyboard" size={20} />
               </button>
-              <label className="agent" title="Signed in as">
-                <Avatar name={agent || '?'} size={30} />
-                <span className="sr-only">Signed in as</span>
-                <select value={agent} onChange={(e) => setAgent(e.target.value)}>
-                  {meta?.agents.map((a) => <option key={a}>{a}</option>)}
-                </select>
-                <Icon name="chevronDown" size={14} />
-              </label>
+              {session.required ? (
+                <>
+                  <span className="agent" title={`Signed in as ${agent}`}>
+                    <Avatar name={agent || '?'} size={26} />
+                    <span className="agent-name">{agent}</span>
+                  </span>
+                  <button type="button" className="icon-btn" onClick={signOut} aria-label="Sign out" title="Sign out">
+                    <Icon name="logout" size={18} />
+                  </button>
+                </>
+              ) : (
+                <label className="agent" title="Demo mode: pick who you are (login is off)">
+                  <Avatar name={agent || '?'} size={26} />
+                  <span className="sr-only">Acting as</span>
+                  <select value={agent} onChange={(e) => setAgent(e.target.value)}>
+                    {meta?.agents.map((a) => <option key={a}>{a}</option>)}
+                  </select>
+                  <Icon name="chevronDown" size={14} />
+                </label>
+              )}
             </div>
           </div>
           <p className="summary" aria-live="polite">
@@ -242,7 +402,28 @@ export default function App() {
           </p>
           <ViewTabs filter={filter} onFilter={setFilter} counts={counts} />
         </header>
+        {counts?.FOLLOW_UP > 0 && filter !== 'FOLLOW_UP' && (
+          <button type="button" className="followup-banner" onClick={() => setFilter('FOLLOW_UP')}>
+            <Icon name="bell" size={15} />
+            <span><strong>{counts.FOLLOW_UP}</strong> follow-up{counts.FOLLOW_UP === 1 ? ' is' : 's are'} due</span>
+            <span className="followup-go">Show <Icon name="chevronRight" size={14} /></span>
+          </button>
+        )}
+        {checked.size > 0 && (
+          <BulkBar
+            count={checked.size}
+            total={list.length}
+            agents={meta?.agents ?? []}
+            onSelectAll={() => setChecked(new Set(list.map((c) => c.id)))}
+            onClear={() => setChecked(new Set())}
+            onAction={(action, assignee) => handlers.bulk(action, assignee).catch(() => {})}
+          />
+        )}
         <ConversationList
+          checked={checked}
+          onToggleCheck={toggleCheck}
+          draftIds={new Set([...drafts.current].filter(([, d]) => d?.text?.trim()).map(([id]) => id))}
+          me={agent}
           items={list}
           loaded={loaded}
           filter={filter}
@@ -267,7 +448,11 @@ export default function App() {
           </div>
         )}
         {showThread ? (
+          <div className="thread-wrap">
           <ConversationView
+            viewers={detail.viewers ?? []}
+            detailsOpen={detailsOpen}
+            onToggleDetails={() => setDetailsOpen((v) => !v)}
             conversation={detail}
             agents={meta?.agents ?? []}
             intents={meta?.intents ?? []}
@@ -282,6 +467,18 @@ export default function App() {
             onStatus={handlers.status}
             onAssign={handlers.assign}
           />
+          {detailsOpen && (
+            <DetailsPanel
+              conversation={detail}
+              now={now}
+              me={session.required ? agent : null}
+              onAddNote={handlers.addNote}
+              onDeleteNote={handlers.deleteNote}
+              onSetReminder={handlers.setReminder}
+              onClose={() => setDetailsOpen(false)}
+            />
+          )}
+          </div>
         ) : (
           <Overview
             stats={stats}
@@ -290,6 +487,7 @@ export default function App() {
             loading={Boolean(selectedId)}
             nextUp={list.filter((x) => x.needs_reply_since).slice(0, 3)}
             onStart={() => move(1)}
+            followUps={counts?.FOLLOW_UP ?? 0}
             onOpen={open}
             onFilter={setFilter}
             onIntent={(value) => {
@@ -301,6 +499,7 @@ export default function App() {
       </main>
       <Toast toast={toast} onClose={() => setToast(null)} />
       {helpOpen && <ShortcutsHelp onClose={() => setHelpOpen(false)} />}
+      {savedOpen && <SavedReplies intents={meta?.intents ?? []} onClose={() => { setSavedOpen(false); refresh(); }} />}
     </div>
   );
 }

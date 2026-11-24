@@ -11,6 +11,8 @@
     "simulate": "npm run simulate -w server --",
     "generate-data": "npm run generate-data -w server",
     "test": "npm test -w server",
-    "test:ml": "python -m unittest discover -s ml/tests"
+    "test:ml": "python -m unittest discover -s ml/tests",
+    "agent": "npm run agent -w server --",
+    "demo:reset": "npm run demo:reset -w server"
   }
 }

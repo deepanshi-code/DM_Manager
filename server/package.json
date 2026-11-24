@@ -7,7 +7,9 @@
     "start": "node --env-file-if-exists=.env src/index.js",
     "test": "node --test \"test/**/*.test.js\"",
     "simulate": "node --env-file-if-exists=.env simulator/simulate.js",
-    "generate-data": "node simulator/generate.js"
+    "generate-data": "node simulator/generate.js",
+    "agent": "node --env-file-if-exists=.env scripts/agent.js",
+    "demo:reset": "node --env-file-if-exists=.env scripts/demo-reset.js"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.15",

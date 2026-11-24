@@ -1,8 +1,9 @@
 // "Sender" = whatever actually delivers a reply to the customer.
-// Phase 1 uses a simulated sender; Phase 4 swaps in the Instagram Graph API.
+// "simulated" for demos and tests; "instagram" calls Meta's messaging API (SENDER=instagram).
 // Keeping this behind one interface means nothing else in the app changes.
 import { randomUUID } from 'node:crypto';
 import { config } from '../config.js';
+import { createInstagramClient } from '../instagram/client.js';
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -17,13 +18,17 @@ export const simulatedSender = {
   },
 };
 
+// Real delivery through Meta's API. Created lazily so a missing token only matters when used.
+let igClient = null;
+export function instagramClient() {
+  igClient ??= createInstagramClient(config.instagram);
+  return igClient;
+}
+
 export const instagramSender = {
   name: 'instagram',
-  async send() {
-    // Phase 4: call the Instagram messaging Send API with the page/business access token.
-    // Check Meta's current docs for the exact endpoint, API version and permissions
-    // (e.g. instagram_business_manage_messages) before implementing this.
-    throw new Error('Instagram sender not implemented yet (Phase 4)');
+  async send({ recipientId, text }) {
+    return instagramClient().sendText(recipientId, text);
   },
 };
 

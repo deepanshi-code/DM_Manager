@@ -12,6 +12,7 @@ import {
 } from '../stateMachine.js';
 import { classify } from '../classifier/index.js';
 import { INTENTS, conversationIntent, isChasing, priorityFor } from '../intents.js';
+import { renderSavedReply, suggestSavedReplies } from './savedReplies.js';
 
 export class HttpError extends Error {
   constructor(status, message) {
@@ -20,7 +21,7 @@ export class HttpError extends Error {
   }
 }
 
-async function logStatus(q, conversationId, from, to, actor, reason) {
+export async function logStatus(q, conversationId, from, to, actor, reason) {
   if (from === to) return;
   await q.query(
     `INSERT INTO status_events (conversation_id, from_status, to_status, actor, reason)
@@ -58,6 +59,44 @@ async function refreshConversationIntent(q, conversationId) {
     [conversationId, intent, chasing, priority],
   );
   return { intent, chasing, priority };
+}
+
+/** Shown as the sender of replies a teammate typed directly in the Instagram app. */
+export const INSTAGRAM_APP_AGENT = 'Instagram app';
+
+/**
+ * Apply "the business replied at `at`" to a locked conversation row. Shared by dashboard
+ * replies and replies typed in the Instagram app (echo webhooks), so both follow one rule:
+ * customer messages sent *after* the reply are still unanswered and keep their timer.
+ */
+async function applyReply(q, conv, { at, agent, text }) {
+  const since = conv.needs_reply_since ? new Date(conv.needs_reply_since) : null;
+  const responseSeconds = since && since <= at ? Math.round((at - since) / 1000) : null;
+  const remaining = (
+    await q.query(
+      `SELECT min(sent_at) AS since FROM messages
+        WHERE conversation_id = $1 AND direction = 'INBOUND' AND sent_at > $2`,
+      [conv.id, at.toISOString()],
+    )
+  ).rows[0].since;
+  const next = remaining ? conv.status : statusAfterReply(conv.status);
+  await q.query(
+    `UPDATE conversations SET
+        status = $2,
+        needs_reply_since = $3,
+        is_overdue = COALESCE($3 <= now() - make_interval(secs => $6), false),
+        first_response_at = COALESCE(first_response_at, $4),
+        last_message_preview = CASE WHEN last_message_at IS NULL OR $4 >= last_message_at
+                                    THEN $5 ELSE last_message_preview END,
+        last_message_at = GREATEST(last_message_at, $4),
+        unread_count = CASE WHEN $3::timestamptz IS NULL THEN 0 ELSE unread_count END,
+        assignee = COALESCE(assignee, $7),
+        remind_at = NULL,
+        updated_at = now()
+      WHERE id = $1`,
+    [conv.id, next, remaining, at.toISOString(), `You: ${text}`.slice(0, 140), config.slaSeconds, agent ?? null],
+  );
+  return { next, responseSeconds };
 }
 
 async function lockConversation(q, id) {
@@ -122,6 +161,7 @@ export async function ingestInbound({ igUserId, username, mid, text, timestamp }
                                       THEN $4 ELSE last_message_preview END,
           last_message_at = GREATEST(last_message_at, $3),
           unread_count = unread_count + 1,
+          remind_at = NULL,
           updated_at = now()
         WHERE id = $1`,
       [conv.id, next, ts, text.slice(0, 140)],
@@ -145,7 +185,7 @@ export async function ingestInbound({ igUserId, username, mid, text, timestamp }
  *   1. record it as PENDING   2. call the sender   3. mark SENT (or FAILED)
  * The conversation only moves to WAITING_ON_CUSTOMER once delivery succeeded.
  */
-export async function sendReply(conversationId, text, agent) {
+export async function sendReply(conversationId, text, agent, { savedReplyId } = {}) {
   const body = typeof text === 'string' ? text.trim() : '';
   if (!body) throw new HttpError(400, 'Reply text is required');
   if (body.length > 1000) throw new HttpError(400, 'Reply is too long (max 1000 characters)');
@@ -160,14 +200,22 @@ export async function sendReply(conversationId, text, agent) {
         `Reply window closed: the customer's last message was over ${config.replyWindowHours}h ago`,
       );
     }
+    // Started from a saved reply? Remember which one, and whether the agent changed it.
+    let template = null;
+    if (savedReplyId != null) {
+      template = (await q.query(`SELECT id, body FROM saved_replies WHERE id = $1`, [savedReplyId])).rows[0];
+      if (!template) throw new HttpError(400, 'Unknown saved reply');
+    }
+    const edited = template ? body !== renderSavedReply(template.body, conv.username).trim() : null;
     const msg = (
       await q.query(
-        `INSERT INTO messages (conversation_id, direction, body, sent_at, delivery_status, sent_by)
-         VALUES ($1, 'OUTBOUND', $2, now(), 'PENDING', $3) RETURNING id`,
-        [conversationId, body, agent ?? null],
+        `INSERT INTO messages (conversation_id, direction, body, sent_at, delivery_status, sent_by,
+                               saved_reply_id, saved_reply_edited)
+         VALUES ($1, 'OUTBOUND', $2, now(), 'PENDING', $3, $4, $5) RETURNING id`,
+        [conversationId, body, agent ?? null, template?.id ?? null, edited],
       )
     ).rows[0];
-    return { messageId: msg.id, igUserId: conv.ig_user_id };
+    return { messageId: msg.id, igUserId: conv.ig_user_id, templateId: template?.id ?? null };
   });
 
   let delivery;
@@ -184,33 +232,72 @@ export async function sendReply(conversationId, text, agent) {
 
   return db.tx(async (q) => {
     const conv = await lockConversation(q, conversationId);
-    const responseSeconds = conv.needs_reply_since
-      ? Math.round((Date.now() - new Date(conv.needs_reply_since).getTime()) / 1000)
-      : null;
+    // Meta also sends our own reply back as an "echo" webhook. If that echo was stored
+    // before we got here, drop the copy and keep this row (it knows which agent sent it).
+    const echo = (
+      await q.query(
+        `DELETE FROM messages WHERE platform_message_id = $1 AND id <> $2 RETURNING response_seconds`,
+        [delivery.mid, pending.messageId],
+      )
+    ).rows[0];
+    const at = new Date();
+    const applied = await applyReply(q, conv, { at, agent, text: body });
+    const responseSeconds = echo ? echo.response_seconds : applied.responseSeconds;
     await q.query(
-      `UPDATE messages SET delivery_status = 'SENT', platform_message_id = $2, sent_at = now(),
+      `UPDATE messages SET delivery_status = 'SENT', platform_message_id = $2, sent_at = $4,
               response_seconds = $3
         WHERE id = $1`,
-      [pending.messageId, delivery.mid, responseSeconds],
+      [pending.messageId, delivery.mid, responseSeconds, at.toISOString()],
     );
-    const next = statusAfterReply(conv.status);
-    await q.query(
-      `UPDATE conversations SET
-          status = $2,
-          needs_reply_since = NULL,
-          is_overdue = false,
-          first_response_at = COALESCE(first_response_at, now()),
-          last_message_at = now(),
-          last_message_preview = $3,
-          unread_count = 0,
-          assignee = COALESCE(assignee, $4),
-          updated_at = now()
-        WHERE id = $1`,
-      [conversationId, next, `You: ${body}`.slice(0, 140), agent ?? null],
-    );
-    await logStatus(q, conversationId, conv.status, next, agent ?? 'agent', 'reply_sent');
+    if (pending.templateId) {
+      await q.query(`UPDATE saved_replies SET use_count = use_count + 1 WHERE id = $1`, [pending.templateId]);
+    }
+    await logStatus(q, conversationId, conv.status, applied.next, agent ?? 'agent', 'reply_sent');
     await refreshConversationIntent(q, conversationId); // clears "chasing"
-    return { messageId: pending.messageId, status: next, responseSeconds };
+    return { messageId: pending.messageId, status: applied.next, responseSeconds };
+  });
+}
+
+/**
+ * A reply a teammate typed directly in the Instagram app (or another tool), delivered to us as
+ * an echo webhook. Without this, the dashboard would keep showing that customer as waiting.
+ * Echoes of replies sent from this dashboard have the same `mid` and are ignored as duplicates.
+ */
+export async function ingestEcho({ igUserId, mid, text, timestamp }) {
+  if (!igUserId || !mid || typeof text !== 'string') {
+    throw new HttpError(400, 'igUserId, mid and text are required');
+  }
+  const at = new Date(timestamp ?? Date.now());
+  return getDb().tx(async (q) => {
+    const known = (await q.query(`SELECT conversation_id FROM messages WHERE platform_message_id = $1`, [mid])).rows[0];
+    if (known) return { duplicate: true, conversationId: known.conversation_id };
+
+    const contact = (
+      await q.query(
+        `INSERT INTO contacts (ig_user_id) VALUES ($1)
+         ON CONFLICT (ig_user_id) DO UPDATE SET ig_user_id = EXCLUDED.ig_user_id
+         RETURNING id`,
+        [igUserId],
+      )
+    ).rows[0];
+    await q.query(`INSERT INTO conversations (contact_id) VALUES ($1) ON CONFLICT (contact_id) DO NOTHING`, [contact.id]);
+    const { id } = (await q.query(`SELECT id FROM conversations WHERE contact_id = $1`, [contact.id])).rows[0];
+    const conv = await lockConversation(q, id);
+
+    const inserted = await q.query(
+      `INSERT INTO messages (conversation_id, platform_message_id, direction, body, sent_at, delivery_status, sent_by)
+       VALUES ($1, $2, 'OUTBOUND', $3, $4, 'SENT', $5)
+       ON CONFLICT (platform_message_id) DO NOTHING
+       RETURNING id`,
+      [id, mid, text, at.toISOString(), INSTAGRAM_APP_AGENT],
+    );
+    if (inserted.rows.length === 0) return { duplicate: true, conversationId: id };
+
+    const applied = await applyReply(q, conv, { at, agent: null, text });
+    await q.query(`UPDATE messages SET response_seconds = $2 WHERE id = $1`, [inserted.rows[0].id, applied.responseSeconds]);
+    await logStatus(q, id, conv.status, applied.next, INSTAGRAM_APP_AGENT, 'reply_in_instagram_app');
+    await refreshConversationIntent(q, id);
+    return { duplicate: false, conversationId: id, messageId: inserted.rows[0].id, status: applied.next };
   });
 }
 
@@ -229,6 +316,7 @@ export async function updateStatus(conversationId, to, actor) {
           status = $2,
           needs_reply_since = CASE WHEN $3::boolean THEN NULL ELSE needs_reply_since END,
           is_overdue = CASE WHEN $3::boolean THEN false ELSE is_overdue END,
+          remind_at = CASE WHEN $3::boolean THEN NULL ELSE remind_at END,
           updated_at = now()
         WHERE id = $1`,
       [conversationId, to, clearTimer],
@@ -259,8 +347,8 @@ export async function updateStatus(conversationId, to, actor) {
   });
 }
 
-export async function assignConversation(conversationId, assignee) {
-  if (assignee !== null && !config.agents.includes(assignee)) {
+export async function assignConversation(conversationId, assignee, validAgents = config.agents) {
+  if (assignee !== null && !validAgents.includes(assignee)) {
     throw new HttpError(400, `Unknown agent: ${assignee}`);
   }
   const { rows } = await getDb().query(
@@ -285,7 +373,7 @@ export async function markRead(conversationId, actor) {
   });
 }
 
-const FILTERS = ['ALL', 'NEEDS_REPLY', 'OVERDUE', 'URGENT', ...ALL_STATUSES];
+const FILTERS = ['ALL', 'NEEDS_REPLY', 'OVERDUE', 'URGENT', 'FOLLOW_UP', 'MINE', ...ALL_STATUSES];
 
 /**
  * Inbox ordering is a design decision:
@@ -297,7 +385,7 @@ const FILTERS = ['ALL', 'NEEDS_REPLY', 'OVERDUE', 'URGENT', ...ALL_STATUSES];
  * Likely-spam chats are still flagged overdue and counted; they just don't jump the queue,
  * because a misclassified real customer can still be found in the Overdue view.
  */
-export async function listConversations({ filter = 'NEEDS_REPLY', search, assignee, intent } = {}) {
+export async function listConversations({ filter = 'NEEDS_REPLY', search, assignee, intent, agent } = {}) {
   if (!FILTERS.includes(filter)) throw new HttpError(400, `Unknown filter: ${filter}`);
   if (intent && intent !== 'unclassified' && !INTENTS.includes(intent)) {
     throw new HttpError(400, `Unknown intent: ${intent}`);
@@ -306,7 +394,7 @@ export async function listConversations({ filter = 'NEEDS_REPLY', search, assign
   const { rows } = await getDb().query(
     `SELECT c.id, c.status, c.assignee, c.needs_reply_since, c.is_overdue, c.overdue_at,
             c.last_message_at, c.last_message_preview, c.unread_count, c.last_customer_message_at,
-            c.intent, c.priority, c.customer_chasing,
+            c.intent, c.priority, c.customer_chasing, c.remind_at,
             ct.username, ct.ig_user_id
        FROM conversations c JOIN contacts ct ON ct.id = c.contact_id
       WHERE ($1::text IS NULL OR c.status = $1)
@@ -317,13 +405,15 @@ export async function listConversations({ filter = 'NEEDS_REPLY', search, assign
         AND ($5::text IS NULL OR c.assignee = $5)
         AND ($6::text IS NULL OR COALESCE(c.intent, 'unclassified') = $6)
         AND ($7::boolean IS NOT TRUE OR (c.needs_reply_since IS NOT NULL AND c.priority = 'URGENT'))
+        AND ($8::boolean IS NOT TRUE OR c.remind_at <= now())
+        AND ($9::text IS NULL OR (c.assignee = $9 AND c.status <> 'RESOLVED'))
       ORDER BY (c.is_overdue AND c.priority <> 'LOW') DESC,
                CASE c.priority WHEN 'URGENT' THEN 0 WHEN 'NORMAL' THEN 1 ELSE 2 END,
                c.needs_reply_since ASC NULLS LAST,
                c.last_message_at DESC
       LIMIT 200`,
     [status, filter === 'OVERDUE', filter === 'NEEDS_REPLY', search || null, assignee || null, intent || null,
-      filter === 'URGENT'],
+      filter === 'URGENT', filter === 'FOLLOW_UP', filter === 'MINE' ? (agent || '') : null],
   );
   return rows;
 }
@@ -413,7 +503,7 @@ export async function getConversation(conversationId) {
     await db.query(
       `SELECT id, direction, body, sent_at, delivery_status, sent_by, response_seconds, error,
               intent, intent_confidence, intent_source, intent_low_confidence,
-              intent_corrected, intent_corrected_by
+              intent_corrected, intent_corrected_by, saved_reply_id, saved_reply_edited
          FROM messages WHERE conversation_id = $1
         ORDER BY sent_at ASC, id ASC`,
       [conversationId],
@@ -422,13 +512,14 @@ export async function getConversation(conversationId) {
   return {
     ...conv,
     messages,
+    suggestedReplies: await suggestSavedReplies(conv),
     allowedTransitions: allowedTransitions(conv.status),
     replyWindow: replyWindow(conv.last_customer_message_at, new Date(), config.replyWindowHours),
   };
 }
 
 /** The numbers you will report in the capstone evaluation. */
-export async function getStats() {
+export async function getStats({ agent } = {}) {
   const db = getDb();
   const counts = (
     await db.query(
@@ -440,8 +531,11 @@ export async function getStats() {
               count(*) FILTER (WHERE needs_reply_since IS NOT NULL)::int AS "NEEDS_REPLY",
               count(*) FILTER (WHERE is_overdue)::int AS "OVERDUE",
               count(*) FILTER (WHERE needs_reply_since IS NOT NULL AND priority = 'URGENT')::int AS "URGENT",
+              count(*) FILTER (WHERE remind_at <= now())::int AS "FOLLOW_UP",
+              count(*) FILTER (WHERE assignee = $1 AND status <> 'RESOLVED')::int AS "MINE",
               min(needs_reply_since) AS oldest_unanswered_since
          FROM conversations`,
+      [agent ?? null],
     )
   ).rows[0];
   const replies = (
@@ -478,8 +572,60 @@ export async function getStats() {
          FROM messages WHERE direction = 'INBOUND'`,
     )
   ).rows[0];
+  // Phase 3 evaluation: are replies that start from a saved reply faster?
+  const templates = (
+    await db.query(
+      `SELECT count(*) FILTER (WHERE saved_reply_id IS NOT NULL)::int AS with_template,
+              count(*) FILTER (WHERE saved_reply_id IS NOT NULL AND saved_reply_edited)::int AS edited,
+              percentile_cont(0.5) WITHIN GROUP (ORDER BY response_seconds)
+                FILTER (WHERE saved_reply_id IS NOT NULL)::float8 AS median_with,
+              percentile_cont(0.5) WITHIN GROUP (ORDER BY response_seconds)
+                FILTER (WHERE saved_reply_id IS NULL)::float8 AS median_without
+         FROM messages
+        WHERE direction = 'OUTBOUND' AND delivery_status = 'SENT' AND sent_by IS DISTINCT FROM $1`,
+      [INSTAGRAM_APP_AGENT],
+    )
+  ).rows[0];
+  // Team view (last 24 hours, not "today": the server's day boundary may differ from the shop's).
+  const byAgent = (
+    await db.query(
+      `SELECT sent_by AS agent, count(*)::int AS replies,
+              count(*) FILTER (WHERE response_seconds <= $1)::int AS within_sla,
+              percentile_cont(0.5) WITHIN GROUP (ORDER BY response_seconds)::float8 AS median_response_seconds
+         FROM messages
+        WHERE direction = 'OUTBOUND' AND delivery_status = 'SENT' AND sent_by IS NOT NULL
+          AND sent_at >= now() - interval '24 hours'
+        GROUP BY sent_by
+        ORDER BY replies DESC, sent_by`,
+      [config.slaSeconds],
+    )
+  ).rows;
+  // Customer messages per hour for the last 12 hours, oldest first (for the volume chart).
+  const hourly = (
+    await db.query(
+      `SELECT floor(extract(epoch FROM now() - sent_at) / 3600)::int AS hours_ago, count(*)::int AS n
+         FROM messages
+        WHERE direction = 'INBOUND' AND sent_at > now() - interval '12 hours'
+        GROUP BY 1`,
+    )
+  ).rows;
+  const inboundByHour = Array.from({ length: 12 }, (_, i) => hourly.find((r) => r.hours_ago === 11 - i)?.n ?? 0);
+
   return {
     counts,
+    team: byAgent.map((r) => ({
+      agent: r.agent,
+      replies: r.replies,
+      withinSlaPct: r.replies ? Math.round((100 * r.within_sla) / r.replies) : null,
+      medianResponseSeconds: r.median_response_seconds,
+    })),
+    inboundByHour,
+    templates: {
+      repliesWithTemplate: templates.with_template,
+      editedPct: templates.with_template ? Math.round((100 * templates.edited) / templates.with_template) : null,
+      medianResponseWithTemplate: templates.median_with,
+      medianResponseWithout: templates.median_without,
+    },
     needsReplyByIntent: Object.fromEntries(byIntent.map((r) => [r.intent, r.n])),
     labels,
     replies: replies.replies,

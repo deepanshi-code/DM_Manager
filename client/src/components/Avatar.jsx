@@ -1,5 +1,5 @@
-// Initials avatar with a stable colour per username. `ring` highlights the chat:
-// "new" = gradient ring (unread), "late" = red ring (overdue).
+// Initials avatar with a soft, stable colour per name, and an optional status dot:
+// "late" (overdue, red), "unread" (blue), "online" (green, the signed-in agent).
 function hue(text) {
   let h = 0;
   for (const ch of text) h = (h * 31 + ch.codePointAt(0)) % 360;
@@ -13,14 +13,11 @@ export function initialsOf(name = '') {
   return (two || '?').toUpperCase();
 }
 
-export default function Avatar({ name = '?', size = 44, ring }) {
+export default function Avatar({ name = '?', size = 40, status }) {
   return (
-    <span
-      className={`avatar ${ring ? `ring-${ring}` : ''}`}
-      style={{ '--h': hue(name), '--size': `${size}px` }}
-      aria-hidden="true"
-    >
+    <span className="avatar" style={{ '--size': `${size}px`, '--h': hue(name) }} aria-hidden="true">
       <span className="avatar-inner">{initialsOf(name)}</span>
+      {status && <span className={`avatar-dot ${status}`} />}
     </span>
   );
 }

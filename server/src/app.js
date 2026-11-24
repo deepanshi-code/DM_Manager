@@ -1,10 +1,13 @@
 import express from 'express';
 import { webhookRouter } from './routes/webhook.js';
 import { apiRouter } from './routes/api.js';
+import { config } from './config.js';
 
 export function createApp() {
   const app = express();
   app.disable('x-powered-by');
+  // Behind a tunnel / reverse proxy that terminates HTTPS, this makes req.secure and req.ip correct.
+  if (config.trustProxy) app.set('trust proxy', /^\d+$/.test(config.trustProxy) ? Number(config.trustProxy) : config.trustProxy);
 
   // Webhook first: it needs the raw body, so it must run before express.json().
   app.use('/webhook', webhookRouter);

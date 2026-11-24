@@ -134,19 +134,23 @@ test('stats report response times', async () => {
   assert.ok(stats.counts.NEEDS_REPLY >= 1);
 });
 
-test('webhook parser ignores echoes and keeps attachments', () => {
+test('webhook parser keeps attachments and maps echoes to the customer', () => {
   const events = parseInstagramWebhook({
     object: 'instagram',
     entry: [{
       messaging: [
-        { sender: { id: '1' }, timestamp: 1, message: { mid: 'a', text: 'hi' } },
-        { sender: { id: '2' }, timestamp: 2, message: { mid: 'b', text: 'ours', is_echo: true } },
-        { sender: { id: '3' }, timestamp: 3, message: { mid: 'c', attachments: [{ type: 'image' }] } },
+        { sender: { id: '1' }, recipient: { id: 'biz' }, timestamp: 1, message: { mid: 'a', text: 'hi' } },
+        { sender: { id: 'biz' }, recipient: { id: '2' }, timestamp: 2, message: { mid: 'b', text: 'ours', is_echo: true } },
+        { sender: { id: '3' }, recipient: { id: 'biz' }, timestamp: 3, message: { mid: 'c', attachments: [{ type: 'image' }] } },
         { sender: { id: '4' }, timestamp: 4, read: { mid: 'x' } },
+        { sender: { id: '5' }, timestamp: 5, message: { mid: 'd', text: 'gone', is_deleted: true } },
       ],
     }],
   });
-  assert.deepEqual(events.map((e) => e.text), ['hi', '[attachment]']);
+  assert.deepEqual(
+    events.map((e) => [e.kind, e.igUserId, e.text]),
+    [['inbound', '1', 'hi'], ['echo', '2', 'ours'], ['inbound', '3', '[attachment]']],
+  );
   assert.deepEqual(parseInstagramWebhook({ object: 'page' }), []);
 });
 

@@ -44,21 +44,14 @@ export const intentLabel = (intent) => INTENT_LABEL[intent ?? 'unclassified'] ??
 
 // Each message type gets an emoji and a colour (hue) so the inbox can be scanned at a glance.
 // The text label is always shown too, so colour is never the only signal.
+// Message types are shown as neutral labels. Only complaints get a tone (red),
+// because they are what makes a chat urgent; spam/unclassified are dimmed.
 export const INTENT_META = {
-  price: { emoji: '💰', hue: 145 },
-  size: { emoji: '📏', hue: 200 },
-  availability: { emoji: '🛍️', hue: 265 },
-  cod_shipping: { emoji: '🚚', hue: 28 },
-  order_status: { emoji: '📦', hue: 38 },
-  return_exchange: { emoji: '🔁', hue: 185 },
-  complaint: { emoji: '⚠️', hue: 350 },
-  collab: { emoji: '🤝', hue: 300 },
-  spam: { emoji: '🚫', hue: 220, muted: true },
-  greeting: { emoji: '👋', hue: 50 },
-  follow_up: { emoji: '🔔', hue: 15 },
-  unclassified: { emoji: '❔', hue: 230, muted: true },
+  complaint: { tone: 'alert' },
+  spam: { tone: 'muted' },
+  unclassified: { tone: 'muted' },
 };
-export const intentMeta = (intent) => INTENT_META[intent ?? 'unclassified'] ?? INTENT_META.unclassified;
+export const intentMeta = (intent) => INTENT_META[intent ?? 'unclassified'] ?? {};
 
 export const STATUS_LABEL = {
   NEW: 'New',
