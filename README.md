@@ -10,6 +10,8 @@
 
 **Phase 4 goal. Connect to real Instagram: send replies through Meta's API, count replies typed in the Instagram app, show real usernames, and require agents to sign in.
 
+> Testing and evaluation results (coverage, load test, security checks, what's not yet evaluated): [docs/EVALUATION.md](docs/EVALUATION.md).
+>
 > Capstone: Phases 1–3 and the Phase 4 code are done. Going live still needs a Meta developer app and a test account: see [docs/INSTAGRAM_SETUP.md](docs/INSTAGRAM_SETUP.md). For presenting, see [docs/DEMO.md](docs/DEMO.md).
 
 ---
@@ -24,7 +26,8 @@ cp server/.env.example server/.env
 npm run dev:server               # API on http://localhost:4000
 npm run dev:client               # front page http://localhost:5173, dashboard /app  (second terminal)
 npm run simulate                 # replay synthetic DMs (third terminal)
-npm test                         # 61 automated server tests
+npm test                         # 76 automated server tests
+npm run loadtest                 # 5,000+ DMs: nothing lost or duplicated, timings
 npm run demo:reset               # fresh, realistic demo inbox (server stopped)
 ```
 

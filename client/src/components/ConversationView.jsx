@@ -84,6 +84,7 @@ export default function ConversationView({
       const el = document.activeElement;
       const typing = el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable);
       if (typing || savedOpen || e.ctrlKey || e.metaKey || e.altKey || document.querySelector('[role="dialog"]')) return;
+      if (!windowOpen) return; // reply window closed: the box is locked, so don't fill it
       const n = Number(e.key);
       if (n >= 1 && n <= suggestions.length) {
         e.preventDefault();

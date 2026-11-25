@@ -373,6 +373,9 @@ export async function markRead(conversationId, actor) {
   });
 }
 
+// Search is literal text: % and _ are LIKE wildcards, so escape them (and the escape char).
+const escapeLike = (text) => String(text).replace(/[\\%_]/g, (c) => '\\' + c);
+
 const FILTERS = ['ALL', 'NEEDS_REPLY', 'OVERDUE', 'URGENT', 'FOLLOW_UP', 'MINE', ...ALL_STATUSES];
 
 /**
@@ -412,7 +415,7 @@ export async function listConversations({ filter = 'NEEDS_REPLY', search, assign
                c.needs_reply_since ASC NULLS LAST,
                c.last_message_at DESC
       LIMIT 200`,
-    [status, filter === 'OVERDUE', filter === 'NEEDS_REPLY', search || null, assignee || null, intent || null,
+    [status, filter === 'OVERDUE', filter === 'NEEDS_REPLY', search ? escapeLike(search) : null, assignee || null, intent || null,
       filter === 'URGENT', filter === 'FOLLOW_UP', filter === 'MINE' ? (agent || '') : null],
   );
   return rows;

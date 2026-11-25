@@ -6,6 +6,17 @@ import { config } from './config.js';
 export function createApp() {
   const app = express();
   app.disable('x-powered-by');
+  // Basic security headers on every response: no MIME sniffing, no framing (clickjacking),
+  // no referrer leaks; customer data from the API is never cached by browsers or proxies.
+  app.use((req, res, next) => {
+    res.set({
+      'x-content-type-options': 'nosniff',
+      'x-frame-options': 'DENY',
+      'referrer-policy': 'no-referrer',
+    });
+    if (req.path.startsWith('/api/')) res.set('cache-control', 'no-store');
+    next();
+  });
   // Behind a tunnel / reverse proxy that terminates HTTPS, this makes req.secure and req.ip correct.
   if (config.trustProxy) app.set('trust proxy', /^\d+$/.test(config.trustProxy) ? Number(config.trustProxy) : config.trustProxy);
 
