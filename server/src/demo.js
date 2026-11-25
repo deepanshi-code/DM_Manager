@@ -97,3 +97,20 @@ export async function seedDemoIfEmpty() {
   if (rows[0].n > 0) return null;
   return seedDemoInbox();
 }
+
+/**
+ * Hosted demo only (DEMO_SEED=true): if the demo data is empty or older than `maxAgeHours`,
+ * wipe it and load a fresh synthetic inbox. Otherwise every chat would pass Meta's 24-hour
+ * reply window within a day and the public demo would look broken. Never use on real data.
+ */
+export async function refreshDemoIfStale(maxAgeHours = 6) {
+  const db = getDb();
+  const { rows } = await db.query(`SELECT max(last_message_at) AS latest, count(*)::int AS n FROM conversations`);
+  const latest = rows[0].latest ? new Date(rows[0].latest).getTime() : 0;
+  if (rows[0].n > 0 && Date.now() - latest < maxAgeHours * 3600_000) return null;
+  if (rows[0].n > 0) {
+    await db.exec(`TRUNCATE conversation_notes, status_events, messages, conversations, contacts, saved_replies, sessions
+                   RESTART IDENTITY CASCADE`);
+  }
+  return seedDemoInbox();
+}

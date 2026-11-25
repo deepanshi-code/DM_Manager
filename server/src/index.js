@@ -6,7 +6,7 @@ import { backfillIntents } from './services/conversations.js';
 import { modelInfo } from './classifier/index.js';
 import { listAgents } from './auth.js';
 import { seedSavedReplies } from './services/savedReplies.js';
-import { seedDemoIfEmpty } from './demo.js';
+import { refreshDemoIfStale } from './demo.js';
 
 const db = await initDb();
 if (config.sender === 'instagram') {
@@ -28,8 +28,8 @@ if (config.auth && (await listAgents()).length === 0) {
 }
 
 if (config.demoSeed) {
-  const demo = await seedDemoIfEmpty();
-  if (demo) console.log(`[demo] empty database: loaded the synthetic demo inbox (${demo.answered + demo.overdue + demo.fresh} chats)`);
+  const demo = await refreshDemoIfStale();
+  if (demo) console.log(`[demo] loaded a fresh synthetic demo inbox (${demo.answered + demo.overdue + demo.fresh} chats)`);
 }
 const seeded = await seedSavedReplies();
 if (seeded) console.log(`[saved replies] added ${seeded} starter replies: edit them to match your shop`);

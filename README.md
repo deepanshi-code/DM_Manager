@@ -60,14 +60,17 @@ To use a real PostgreSQL server instead, set `DATABASE_URL` in `server/.env`. Th
 ## Deploy a permanent demo link (Render, free)
 
 `render.yaml` sets everything up: one web service that runs the API and serves the built
-dashboard, with the synthetic demo inbox loaded at startup.
+dashboard, plus a free PostgreSQL database (the embedded one needs more than the free plan's
+512 MB of memory). The synthetic demo inbox is loaded at startup, and reloaded when it is
+older than 6 hours, so chats never sit past Meta's 24-hour reply window.
 
 1. Sign in at https://render.com with GitHub.
 2. **New → Blueprint**, pick this repository, click **Apply**.
 3. When the build finishes, the link is `https://<service-name>.onrender.com` (front page) and `/app` (dashboard).
 
 Free instances sleep after ~15 minutes without visitors; the first visit after that takes
-about a minute to wake up, and the demo data is reloaded fresh. For real customers use
+about a minute to wake up. Render's free databases have had a time limit (30 days), so check
+their current policy and recreate or upgrade the database when it expires. For real customers use
 `AUTH=on`, a hosted PostgreSQL (`DATABASE_URL`) and the Instagram setup guide.
 
 To run the production build locally: `npm run build`, then

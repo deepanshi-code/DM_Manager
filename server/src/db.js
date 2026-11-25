@@ -45,7 +45,10 @@ function wrapPglite(lite) {
 /** @param {{ dataDir?: string }} [options] dataDir 'memory://' gives a throwaway DB (tests). */
 export async function initDb(options = {}) {
   if (config.databaseUrl && !options.dataDir) {
-    db = wrapPg(new pg.Pool({ connectionString: config.databaseUrl }));
+    const pool = new pg.Pool({ connectionString: config.databaseUrl, max: 5 });
+    // An idle connection dropped by the server must not crash the process; the pool reconnects.
+    pool.on('error', (err) => console.error('[db] idle connection error:', err.message));
+    db = wrapPg(pool);
   } else {
     const dataDir = options.dataDir ?? config.pgliteDir;
     // PGlite only creates the last folder level, so make sure the parents exist.

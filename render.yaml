@@ -1,6 +1,6 @@
 # One-click hosted demo on Render (https://render.com): New → Blueprint → pick this repository.
-# One web service runs the API and serves the built dashboard. It uses the embedded database
-# with synthetic demo data, which is reloaded whenever the service starts (free instances
+# One web service runs the API and serves the built dashboard, with a free PostgreSQL database.
+# Synthetic demo data is reloaded at startup when it is older than 6 hours (free instances
 # restart after being idle), so the demo is always fresh. No real customer data.
 services:
   - type: web
@@ -8,13 +8,17 @@ services:
     runtime: node
     plan: free
     buildCommand: npm ci && npm run build
-    # Run node directly (no npm wrapper process) and cap the JS heap: the free plan has 512 MB and
-    # the embedded PostgreSQL (PGlite, WebAssembly) alone needs about 300 MB.
+    # Run node directly (no npm wrapper process) and cap the JS heap to stay well inside 512 MB.
     startCommand: cd server && node --max-old-space-size=192 src/index.js
     healthCheckPath: /health
     envVars:
       - key: NODE_VERSION
         value: "24"
+      # Real PostgreSQL (the embedded one needs more memory than the free plan's 512 MB).
+      - key: DATABASE_URL
+        fromDatabase:
+          name: dm-manager-db
+          property: connectionString
       - key: SERVE_CLIENT
         value: "true"
       - key: DEMO_SEED
@@ -33,3 +37,10 @@ services:
         generateValue: true
       - key: IG_VERIFY_TOKEN
         generateValue: true
+
+databases:
+  # Free plan: check Render's current limits (free databases have expired after 30 days).
+  - name: dm-manager-db
+    plan: free
+    databaseName: dm_manager
+    user: dm_manager
