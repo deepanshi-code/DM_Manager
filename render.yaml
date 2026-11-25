@@ -8,7 +8,9 @@ services:
     runtime: node
     plan: free
     buildCommand: npm ci && npm run build
-    startCommand: npm start
+    # Run node directly (no npm wrapper process) and cap the JS heap: the free plan has 512 MB and
+    # the embedded PostgreSQL (PGlite, WebAssembly) alone needs about 300 MB.
+    startCommand: cd server && node --max-old-space-size=192 src/index.js
     healthCheckPath: /health
     envVars:
       - key: NODE_VERSION
