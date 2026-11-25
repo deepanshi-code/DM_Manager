@@ -1,4 +1,5 @@
 import express from 'express';
+import { fileURLToPath } from 'node:url';
 import { webhookRouter } from './routes/webhook.js';
 import { apiRouter } from './routes/api.js';
 import { config } from './config.js';
@@ -25,6 +26,15 @@ export function createApp() {
   app.use(express.json({ limit: '100kb' }));
   app.use('/api', apiRouter);
   app.get('/health', (req, res) => res.json({ ok: true }));
+
+  // Production: serve the built dashboard. "/" is the front page, "/app" the dashboard; both are
+  // the same index.html (the client decides), and hashed asset files are cached for a long time.
+  if (config.serveClient) {
+    const dist = fileURLToPath(new URL('../../client/dist/', import.meta.url));
+    app.use('/assets', express.static(`${dist}assets`, { immutable: true, maxAge: '1y' }));
+    app.use(express.static(dist, { index: false, maxAge: '1h' }));
+    app.get(/^\/(?!api\/|webhook\/).*/, (req, res) => res.sendFile('index.html', { root: dist }));
+  }
 
   // Express 5 forwards errors thrown in async handlers to here.
   app.use((err, req, res, next) => {

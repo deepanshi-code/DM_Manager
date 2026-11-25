@@ -29,5 +29,9 @@ export const config = {
     .map((s) => s.trim())
     .filter(Boolean),
   pgliteDir: process.env.PGLITE_DIR || './.data/pglite',
+  // Hosted demo: fill an empty database with the synthetic demo inbox at startup.
+  demoSeed: (process.env.DEMO_SEED || '').toLowerCase() === 'true',
+  // Serve the built dashboard (client/dist) from this server, so one service runs everything.
+  serveClient: (process.env.SERVE_CLIENT || '').toLowerCase() === 'true',
   databaseUrl: process.env.DATABASE_URL || '',
 };

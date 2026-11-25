@@ -1,0 +1,33 @@
+# One-click hosted demo on Render (https://render.com): New → Blueprint → pick this repository.
+# One web service runs the API and serves the built dashboard. It uses the embedded database
+# with synthetic demo data, which is reloaded whenever the service starts (free instances
+# restart after being idle), so the demo is always fresh. No real customer data.
+services:
+  - type: web
+    name: dm-manager
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: SERVE_CLIENT
+        value: "true"
+      - key: DEMO_SEED
+        value: "true"
+      # Public demo with synthetic data: open without login. Use AUTH=on for real customers.
+      - key: AUTH
+        value: "off"
+      - key: SENDER
+        value: simulated
+      - key: SLA_SECONDS
+        value: "300"
+      - key: TRUST_PROXY
+        value: "1"
+      # Random secrets so nobody can post fake webhooks to the public demo.
+      - key: IG_APP_SECRET
+        generateValue: true
+      - key: IG_VERIFY_TOKEN
+        generateValue: true
