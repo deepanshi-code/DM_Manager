@@ -145,7 +145,7 @@ export default function Overview({ stats, agent, now, nextUp, loading, onStart, 
             </p>
           </section>
 
-          <section className="panel">
+          <section className="panel bars-panel">
             <div className="panel-head">
               <h2>Waiting, by message type</h2>
               <span className="panel-hint">Click to filter</span>
@@ -174,7 +174,7 @@ export default function Overview({ stats, agent, now, nextUp, loading, onStart, 
             )}
           </section>
 
-          <section className="panel">
+          <section className="panel team-panel">
             <div className="panel-head">
               <h2>Team</h2>
               <span className="panel-hint">Last 24 hours</span>
@@ -205,7 +205,7 @@ export default function Overview({ stats, agent, now, nextUp, loading, onStart, 
             )}
           </section>
 
-          <section className="panel">
+          <section className="panel next-panel">
             <div className="panel-head">
               <h2>Next up</h2>
               {followUps > 0 && (
