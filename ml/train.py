@@ -27,7 +27,7 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 from sklearn.model_selection import GridSearchCV, GroupKFold, cross_val_predict
 from sklearn.pipeline import Pipeline
 
-from features import features, hybrid_features, preprocess, word_hybrid_features
+from features import features, hybrid_features, preprocess, word_hybrid_features, compile_rule
 
 ANALYZERS = {"ngram": features, "hybrid": hybrid_features, "word_hybrid": word_hybrid_features}
 ANALYZER_NAME = {fn: name for name, fn in ANALYZERS.items()}
@@ -45,9 +45,16 @@ def load(path: Path) -> list[dict]:
 
 
 # ---------- keyword baseline (same semantics as server/src/classifier/keywords.js) ----------
+FEATURE_DESCRIPTIONS = {
+    "ngram": "word unigrams/bigrams + char 3-4-grams",
+    "hybrid": "word unigrams/bigrams + char 3-4-grams + keyword-rule features",
+    "word_hybrid": "word unigrams/bigrams + keyword-rule features, no char n-grams",
+}
+
+
 def load_rules():
     spec = json.loads((SERVER_CLASSIFIER / "keyword_rules.json").read_text(encoding="utf-8"))
-    return [(r["intent"], [re.compile(p) for p in r["patterns"]]) for r in spec["rules"]]
+    return [(r["intent"], [compile_rule(p) for p in r["patterns"]]) for r in spec["rules"]]
 
 
 def keyword_predict(rules, text: str) -> str:
@@ -59,8 +66,13 @@ def keyword_predict(rules, text: str) -> str:
 
 
 def policy_decide(proba_row, classes, threshold, rule_intent):
-    """Mirror of decide() in server/src/classifier/index.js. Returns (intent, source, low_confidence)."""
+    """Mirror of classify() in server/src/classifier/index.js. Returns (intent, source, low_confidence).
+
+    A matching complaint keyword always wins: a missed complaint is the costliest error (it loses
+    URGENT priority), and a low-confidence model must not override clear words like "damaged"."""
     i = int(np.argmax(proba_row))
+    if rule_intent == "complaint":
+        return "complaint", "rules", False
     if proba_row[i] >= threshold:
         return classes[i], "model", False
     if rule_intent != UNCLASSIFIED:
@@ -179,7 +191,7 @@ def main():
         policy_decide(row, model_classes, threshold, keyword_predict(rules, text))[0]
         for row, text in zip(proba, X_test)
     ]
-    policy = summarise("Server policy: model if confident -> rules -> model guess", y_test, policy_pred, labels)
+    policy = summarise("Server policy: complaint keyword -> model if confident -> rules -> model guess", y_test, policy_pred, labels)
 
     # For transparency, also test the feature sets that were NOT selected.
     other_rows = []
@@ -203,6 +215,9 @@ def main():
         real_results = [
             summarise("Keyword rules (real)", yr, [keyword_predict(rules, t) for t in Xr], labels),
             summarise(f"TF-IDF + LogReg, threshold {threshold} (real)", yr, apply_threshold(pr, model_classes, threshold), labels),
+            summarise("Server policy (real)", yr,
+                      [policy_decide(row, model_classes, threshold, keyword_predict(rules, t))[0] for row, t in zip(pr, Xr)],
+                      labels),
         ]
 
     # 5. export for the Node server
@@ -228,7 +243,8 @@ def main():
     (SERVER_CLASSIFIER / "model.json").write_text(json.dumps(export, separators=(",", ":")), encoding="utf-8")
 
     # Parity samples: the JS test must reproduce these probabilities.
-    parity_texts = X_test[:60] + ["", "😍😍", "PRICE???", "hiiiii", "order 12345 kab aayega bhai"]
+    parity_texts = X_test[:60] + ["", "😍😍", "PRICE???", "hiiiii", "order 12345 kab aayega bhai",
+                                  "सर ??", "भाई??", "éxl", "ping\n", "size xl\n", "kurta का price?", "hello\nprice?"]
     parity_proba = model.predict_proba(parity_texts)
     parity = [{"text": t, "proba": [round(float(p), 6) for p in row]} for t, row in zip(parity_texts, parity_proba)]
     (ROOT.parent / "server" / "test" / "fixtures").mkdir(exist_ok=True)
@@ -270,7 +286,7 @@ def main():
         "- Grouped 5-fold CV on train (groups = template), selecting feature set and C by macro-F1:",
         *[f"  - `{name}`: best C = {c}, CV macro-F1 {fmt_pct(score)}" for name, (score, c) in variant_cv.items()],
         f"- **Selected: `{best_analyzer}`, C = {best_c}.**",
-        f"- Vocabulary: {len(vocab)} features (word unigrams/bigrams + char 3-4-grams, min_df=2).",
+        f"- Vocabulary: {len(vocab)} features ({FEATURE_DESCRIPTIONS[best_analyzer]}, min_df=2).",
         "",
         "## Confidence threshold (chosen on cross-validated TRAIN predictions)",
         "",

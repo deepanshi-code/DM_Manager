@@ -36,8 +36,11 @@ function writePref(key, value) {
   }
 }
 
+// Only text entry swallows shortcuts; a ticked checkbox or a changed dropdown must not.
+const TEXT_INPUTS = new Set(['text', 'search', 'password', 'email', 'number', 'tel', 'url', 'datetime-local', 'date', 'time']);
 const isTyping = (el) =>
-  el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable);
+  el && ((el.tagName === 'INPUT' && TEXT_INPUTS.has((el.type || 'text').toLowerCase()))
+    || el.tagName === 'TEXTAREA' || el.isContentEditable);
 
 export default function App() {
   // null = still checking; { required, agent } once the server has answered.
@@ -61,6 +64,10 @@ export default function App() {
   const [alertsOn, setAlertsOn] = useState(() => readPref('dm.alerts', false));
   const [detailsOpen, setDetailsOpen] = useState(() => readPref('dm.details', typeof window !== 'undefined' && window.innerWidth >= 1280));
   const [checked, setChecked] = useState(() => new Set()); // conversations selected for a bulk action
+  const [bootError, setBootError] = useState(''); // the server couldn't be reached on first load
+  const selectedIdRef = useRef(null); // the chat on screen right now (for async callbacks)
+  selectedIdRef.current = selectedId;
+  const openSeq = useRef(0);
   const lastCounts = useRef(null); // previous overdue/urgent counts, to alert only on increases
 
   const requestSeq = useRef(0);
@@ -72,12 +79,41 @@ export default function App() {
   // Signed in, or the server runs without login (AUTH=off demo mode).
   const ready = Boolean(session && (!session.required || session.agent));
 
+  // Ask the server whether login is required. If it can't be reached (still starting, waking up
+  // from sleep, network blip) keep retrying and say so; never guess "no login needed".
   useEffect(() => {
-    api.me().then(setSession).catch(() => setSession({ required: false, agent: null }));
+    let cancelled = false;
+    let timer;
+    const check = () => api.me()
+      .then((s) => { if (!cancelled) { setBootError(''); setSession(s); } })
+      .catch((e) => {
+        if (cancelled) return;
+        setBootError(e.message);
+        timer = setTimeout(check, 3000);
+      });
+    check();
+    return () => { cancelled = true; clearTimeout(timer); };
   }, []);
 
-  // Any 401 means the session expired or was revoked: go back to the login screen.
-  const signedOut = useCallback(() => setSession((s) => ({ required: s?.required ?? true, agent: null })), []);
+  // Forget everything that belonged to the previous agent (sign-out, expired session).
+  const resetUserState = useCallback(() => {
+    drafts.current.clear();
+    lastCounts.current = null;
+    setChecked(new Set());
+    setSelectedId(null);
+    setDetail(null);
+    setList([]);
+    setStats(null);
+    setLoaded(false);
+    setError('');
+    setToast(null);
+  }, []);
+
+  // A 401 only comes from a server with login on: show the login screen.
+  const signedOut = useCallback(() => {
+    resetUserState();
+    setSession({ required: true, agent: null });
+  }, [resetUserState]);
   const isAuthError = (e) => e?.status === 401;
 
   useEffect(() => {
@@ -142,6 +178,13 @@ export default function App() {
       ]);
       if (seq !== requestSeq.current) return; // a newer request started (filter changed): drop this one
       setList(l);
+      // A chat that left this view (answered by a teammate) can't stay selected for a bulk action.
+      setChecked((prev) => {
+        if (prev.size === 0) return prev;
+        const visible = new Set(l.map((c) => c.id));
+        const kept = [...prev].filter((cid) => visible.has(cid));
+        return kept.length === prev.size ? prev : new Set(kept);
+      });
       setStats(s);
       setDetail(d);
       setNow(Date.now());
@@ -172,17 +215,39 @@ export default function App() {
 
   const open = useCallback(async (id) => {
     setSelectedId(id);
+    // Shareable link to the open chat: /app?c=<id> (replaceState, so Back still leaves the app).
+    try {
+      const url = new URL(window.location.href);
+      if (id) url.searchParams.set('c', String(id));
+      else url.searchParams.delete('c');
+      window.history.replaceState(null, '', url);
+    } catch {
+      /* ignore */
+    }
+    const seq = ++openSeq.current;
     if (!id) {
       setDetail(null);
       return;
     }
     try {
       await api.read(id, agent);
-      setDetail(await api.get(id, agent));
+      const d = await api.get(id, agent);
+      if (seq === openSeq.current) setDetail(d); // the agent may have moved on to another chat
     } catch (e) {
-      setError(e.message);
+      if (seq !== openSeq.current) return;
+      if (isAuthError(e)) signedOut();
+      else setError(e.message);
     }
-  }, [agent]);
+  }, [agent, signedOut]);
+
+  // Opening a shared link (/app?c=<id>): open that chat once the app is ready.
+  const deepLinked = useRef(false);
+  useEffect(() => {
+    if (!ready || !meta || deepLinked.current) return;
+    deepLinked.current = true;
+    const id = Number(new URLSearchParams(window.location.search).get('c'));
+    if (Number.isInteger(id) && id > 0) open(id);
+  }, [ready, meta, open]);
 
   /** The conversation to open after finishing `id`: the next one down, else the one above. */
   function nextAfter(id) {
@@ -202,7 +267,8 @@ export default function App() {
 
   function finished(id, message, undo) {
     setToast({ id: Date.now(), message, undo });
-    if (!autoAdvance) return;
+    // If the agent already opened another chat while this one was sending, stay there.
+    if (!autoAdvance || selectedIdRef.current !== id) return;
     const next = nextAfter(id);
     if (next) open(next);
     else {
@@ -239,7 +305,7 @@ export default function App() {
       return run(() => api.setStatus(id, status, agent)).then(() => {
         if (status === 'RESOLVED') {
           finished(id, `Resolved ${name}`, previous && previous !== 'RESOLVED'
-            ? () => run(() => api.setStatus(id, 'OPEN', agent)).then(() => open(id))
+            ? () => run(() => api.setStatus(id, 'OPEN', agent)).then(() => open(id)).catch(() => {})
             : undefined);
         }
       });
@@ -283,12 +349,15 @@ export default function App() {
     function onKey(e) {
       if (e.key === 'Escape') {
         if (helpOpen) setHelpOpen(false);
+        else if (savedOpen) setSavedOpen(false);
+        else if (document.querySelector('[role="dialog"]')) return; // that dialog closes itself
         else if (isTyping(document.activeElement)) document.activeElement.blur();
         else if (checked.size) setChecked(new Set());
         else if (selectedId) open(null);
         return;
       }
       if (isTyping(document.activeElement) || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.key === '?' && !savedOpen) { e.preventDefault(); setHelpOpen((v) => !v); return; }
       if (savedOpen || document.querySelector('[role="dialog"]')) return; // a dialog has the keyboard
       const key = e.key;
       if (key === 'j' || key === 'ArrowDown') { e.preventDefault(); move(1); }
@@ -303,7 +372,6 @@ export default function App() {
       else if (key === 'x' && selectedId) { e.preventDefault(); toggleCheck(selectedId); }
       else if (key === 'e' && detail?.allowedTransitions.includes('RESOLVED')) { e.preventDefault(); handlers.status('RESOLVED').catch(() => {}); }
       else if (key === '/') { e.preventDefault(); document.getElementById('inbox-search')?.focus(); }
-      else if (key === '?') { e.preventDefault(); setHelpOpen((v) => !v); }
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -314,15 +382,23 @@ export default function App() {
 
   async function signOut() {
     await api.logout().catch(() => {});
-    drafts.current.clear();
-    setSelectedId(null);
-    setDetail(null);
-    setList([]);
-    setLoaded(false);
+    resetUserState();
     setSession({ required: true, agent: null });
   }
 
-  if (!session) return null; // checking the session: a blank frame for a few ms beats a flash of the login form
+  if (!session) {
+    // Checking the session. Blank for the first moment (no flash), a clear message if it takes retries.
+    return bootError ? (
+      <main className="boot">
+        <div className="boot-card" role="status">
+          <span className="spinner" aria-hidden="true" />
+          <strong>Connecting to the server…</strong>
+          <span>It may be starting up or waking from sleep. Retrying every few seconds.</span>
+          <small>{bootError}</small>
+        </div>
+      </main>
+    ) : null;
+  }
   if (!ready) return <Login onSignedIn={(name) => setSession({ required: true, agent: name })} />;
 
   return (
@@ -439,14 +515,14 @@ export default function App() {
         />
       </aside>
 
+      {error && (
+        <div className="error-banner" role="alert">
+          <Icon name="alert" size={16} />
+          <span>{error}</span>
+          <button type="button" className="link" onClick={() => setError('')}>Dismiss</button>
+        </div>
+      )}
       <main className="main">
-        {error && (
-          <div className="error-banner" role="alert">
-            <Icon name="alert" size={16} />
-            <span>{error}</span>
-            <button type="button" className="link" onClick={() => setError('')}>Dismiss</button>
-          </div>
-        )}
         {showThread ? (
           <div className="thread-wrap">
           <ConversationView

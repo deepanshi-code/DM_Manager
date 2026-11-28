@@ -26,7 +26,7 @@ cp server/.env.example server/.env
 npm run dev:server               # API on http://localhost:4000
 npm run dev:client               # front page http://localhost:5173, dashboard /app  (second terminal)
 npm run simulate                 # replay synthetic DMs (third terminal)
-npm test                         # 76 automated server tests
+npm test                         # 90 automated server tests
 npm run loadtest                 # 5,000+ DMs: nothing lost or duplicated, timings
 npm run demo:reset               # fresh, realistic demo inbox (server stopped)
 ```

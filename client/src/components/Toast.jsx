@@ -22,7 +22,7 @@ export default function Toast({ toast, onClose }) {
               type="button"
               className="toast-action"
               onClick={() => {
-                toast.undo();
+                Promise.resolve(toast.undo()).catch(() => {}); // errors are shown by the app's banner
                 onClose();
               }}
             >

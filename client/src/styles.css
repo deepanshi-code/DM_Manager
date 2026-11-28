@@ -613,7 +613,18 @@ code { font: 12px ui-monospace, 'Cascadia Code', Consolas, monospace; background
 .agent-name { font-weight: 500; color: var(--text); padding-right: 4px; }
 
 /* ---------- Banner, toast, dialog ---------- */
-.error-banner { display: flex; align-items: center; gap: 10px; padding: 9px 16px; background: var(--late-soft); color: var(--late); font-weight: 500; border-bottom: 1px solid var(--border); z-index: 2; }
+.error-banner {
+  position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 35; width: min(560px, calc(100vw - 24px));
+  display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 8px;
+  background: var(--late-soft); color: var(--late); font-weight: 500; border: 1px solid color-mix(in srgb, var(--late) 30%, transparent);
+  box-shadow: var(--shadow-pop);
+}
+.boot { min-height: 100%; display: grid; place-items: center; padding: 24px 16px; background: var(--bg); }
+.boot-card { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; max-width: 380px; color: var(--muted); }
+.boot-card strong { color: var(--text); font-size: 15px; }
+.boot-card small { color: var(--faint); font-size: 12px; }
+.spinner { width: 26px; height: 26px; border-radius: 50%; border: 3px solid var(--surface-3); border-top-color: var(--accent); animation: spin 0.9s linear infinite; margin-bottom: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
 .error-banner span { flex: 1; }
 .toast-region { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 20; pointer-events: none; }
 .toast {

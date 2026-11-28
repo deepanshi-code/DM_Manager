@@ -2,7 +2,7 @@
 // customer details, activity timeline, "also viewing" presence, bulk actions, CSV report.
 import { getDb } from '../db.js';
 import { config } from '../config.js';
-import { HttpError, updateStatus, assignConversation, correctIntent } from './conversations.js';
+import { HttpError, updateStatus, assignConversation, correctIntent, csvCell } from './conversations.js';
 
 const MAX_NOTE = 2000;
 const MAX_REMINDER_DAYS = 30;
@@ -185,11 +185,6 @@ export async function bulkAction({ ids, action, assignee }, agent, validAgents) 
 }
 
 // ---------- Report (CSV) ----------
-
-const csvCell = (v) => {
-  const s = v == null ? '' : v instanceof Date ? v.toISOString() : String(v);
-  return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-};
 
 /**
  * One row per conversation with its reply-time facts, for the evaluation (spreadsheet,

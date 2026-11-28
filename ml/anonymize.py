@@ -31,9 +31,12 @@ PATTERNS = [
     ("url", re.compile(r"\b(?:https?://|www\.)\S+", re.I), lambda m: "[link]"),
     ("upi", re.compile(r"\b[\w.-]{2,}@(?:ok\w+|ybl|paytm|upi|ibl|axl|apl|sbi|icici|hdfcbank)\b", re.I),
      lambda m: "[upi]"),
+    # Any other name@handle without a dot-TLD (emails were replaced above) is a payment ID:
+    # UPI handles are many (axisbank, kotak, yesbank, ...), so don't rely on a fixed list.
+    ("upi", re.compile(r"\b[\w.-]{2,}@[A-Za-z]{2,}\b"), lambda m: "[upi]"),
     ("handle", re.compile(r"(?<![\w@])@[A-Za-z0-9._]{2,30}"), lambda m: "@user"),
     # Indian mobile numbers: optional +91 / 0, then 10 digits starting 6-9, spaces or dashes allowed
-    ("phone", re.compile(r"(?<!\d)(?:\+?91[\s-]?|0)?[6-9]\d{4}[\s-]?\d{5}(?!\d)"), ZEROS),
+    ("phone", re.compile(r"(?<!\d)(?:\+?91[\s.-]?|0)?[6-9](?:[\s.-]?\d){9}(?!\d)"), ZEROS),
     ("order", re.compile(r"#\s?\d{3,}|\b(?:order|ord|awb|tracking|track)\s*(?:id|no\.?|number)?\s*[:#-]?\s*\d{3,}", re.I),
      ZEROS),
     ("number", re.compile(r"\d{5,}"), ZEROS),  # pincodes, account numbers, anything long
@@ -41,7 +44,7 @@ PATTERNS = [
 
 _INTRO = r"\b(?i:my name is|i am|i'm|this is|mera naam|naam)\s+"
 NAME_INTRO = re.compile(_INTRO + r"([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)")  # "my name is Riya Sharma"
-INTRO_ANY = re.compile(r"\b(?:my name is|mera naam|naam)\s+\w+", re.I)  # "my name is riya" (lowercase)
+INTRO_ANY = re.compile(r"\b(?:my name is|mera naam|naam|i am|i'm|this is)\s+\w+", re.I)  # lowercase intros
 ADDRESS_WORDS = re.compile(
     r"\b(?:flat|house no|h\.?\s?no|plot|sector|street|road|nagar|colony|apartment|apt|near|landmark|"
     r"gali|mohalla|village|district|address|pincode|pin code)\b",
@@ -84,7 +87,10 @@ def anonymize(text, names_re=None):
     needs_review = (
         bool(ADDRESS_WORDS.search(out))
         or bool(re.search(r"\b[A-Z][a-z]{2,}\s+[A-Z][a-z]{2,}\b", out))  # "Riya Sharma"-like pairs
+        or bool(re.search(r"\b[A-Z]{3,}\s+[A-Z]{3,}\b", out))  # "RIYA SHARMA"
         or bool(INTRO_ANY.search(out.replace("[name]", "")) and "[name]" not in out)
+        or len(re.findall(r"[1-9]", out)) >= 7  # a number may have survived in an unusual format
+        or bool(re.search(r"\w@\w", out))  # a payment or email address in a format not handled above
     )
     return out, found, needs_review
 

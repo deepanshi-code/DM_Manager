@@ -135,3 +135,10 @@ CREATE INDEX IF NOT EXISTS idx_notes_conversation ON conversation_notes(conversa
 ALTER TABLE conversations ADD COLUMN IF NOT EXISTS remind_at TIMESTAMPTZ;
 ALTER TABLE conversations ADD COLUMN IF NOT EXISTS remind_set_by TEXT;
 CREATE INDEX IF NOT EXISTS idx_conversations_remind ON conversations(remind_at) WHERE remind_at IS NOT NULL;
+
+-- ---------- App metadata (e.g. when the hosted demo inbox was last loaded) ----------
+CREATE TABLE IF NOT EXISTS app_meta (
+  key         TEXT PRIMARY KEY,
+  value       TEXT NOT NULL,
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);

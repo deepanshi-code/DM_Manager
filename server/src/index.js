@@ -28,8 +28,18 @@ if (config.auth && (await listAgents()).length === 0) {
 }
 
 if (config.demoSeed) {
-  const demo = await refreshDemoIfStale();
-  if (demo) console.log(`[demo] loaded a fresh synthetic demo inbox (${demo.answered + demo.overdue + demo.fresh} chats)`);
+  // DEMO_SEED wipes and reloads the database. Never allow it where real customers could be.
+  if (config.sender === 'instagram' || config.auth) {
+    console.error('[config] DEMO_SEED=true deletes all conversations; it is only for the public demo. '
+      + 'Remove DEMO_SEED when using SENDER=instagram or AUTH=on. Not starting.');
+    process.exit(1);
+  }
+  const reportDemo = (demo) => {
+    if (demo) console.log(`[demo] loaded a fresh synthetic demo inbox (${demo.answered + demo.overdue + demo.fresh} chats)`);
+  };
+  reportDemo(await refreshDemoIfStale());
+  // An instance that stays awake (frequent visitors) refreshes too, checked hourly.
+  setInterval(() => refreshDemoIfStale().then(reportDemo).catch((err) => console.error('[demo] refresh failed:', err.message)), 3600_000).unref();
 }
 const seeded = await seedSavedReplies();
 if (seeded) console.log(`[saved replies] added ${seeded} starter replies: edit them to match your shop`);

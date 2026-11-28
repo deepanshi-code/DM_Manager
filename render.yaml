@@ -23,7 +23,8 @@ services:
         value: "true"
       - key: DEMO_SEED
         value: "true"
-      # Public demo with synthetic data: open without login. Use AUTH=on for real customers.
+      # Public demo with synthetic data: open without login. For real customers use AUTH=on and
+      # REMOVE DEMO_SEED (it wipes the database; the server refuses to start with both).
       - key: AUTH
         value: "off"
       - key: SENDER

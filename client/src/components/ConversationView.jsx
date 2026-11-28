@@ -43,6 +43,8 @@ export default function ConversationView({
   const bottomRef = useRef(null);
   const messageCount = c?.messages.length ?? 0;
   const id = c?.id;
+  const currentIdRef = useRef(id);
+  currentIdRef.current = id;
 
   const setDraft = (text, fromTemplate = templateId) => {
     const t = text.trim() ? fromTemplate : null; // clearing the box forgets the template
@@ -118,7 +120,7 @@ export default function ConversationView({
     try {
       await onReply(draft, templateId);
       drafts.current.delete(sentFrom);
-      if (sentFrom === id) {
+      if (sentFrom === currentIdRef.current) { // still on the same chat (not one opened meanwhile)
         setDraftState('');
         setTemplateId(null);
       }

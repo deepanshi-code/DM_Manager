@@ -18,8 +18,19 @@ import re
 from pathlib import Path
 
 _RULES_PATH = Path(__file__).resolve().parent.parent / "server" / "src" / "classifier" / "keyword_rules.json"
+
+
+def compile_rule(pattern: str) -> "re.Pattern[str]":
+    """Compile a keyword rule so it matches exactly like `new RegExp(pattern)` in JavaScript:
+    - re.ASCII: \\w, \\W and \\b are ASCII-only in JS (no `u` flag), Unicode-aware in Python;
+    - a `$` anchor means "end of text" in JS but also matches before a final newline in Python,
+      so it becomes \\Z.
+    The parity test covers Devanagari, accented and trailing-newline texts."""
+    return re.compile(re.sub(r"(?<!\\)\$", r"\\Z", pattern), re.ASCII)
+
+
 _RULES = [
-    (r["intent"], [re.compile(p) for p in r["patterns"]])
+    (r["intent"], [compile_rule(p) for p in r["patterns"]])
     for r in json.loads(_RULES_PATH.read_text(encoding="utf-8"))["rules"]
 ]
 

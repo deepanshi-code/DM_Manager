@@ -98,19 +98,30 @@ export async function seedDemoIfEmpty() {
   return seedDemoInbox();
 }
 
+const SEEDED_KEY = 'demo_seeded_at';
+
 /**
- * Hosted demo only (DEMO_SEED=true): if the demo data is empty or older than `maxAgeHours`,
- * wipe it and load a fresh synthetic inbox. Otherwise every chat would pass Meta's 24-hour
- * reply window within a day and the public demo would look broken. Never use on real data.
+ * Hosted demo only (DEMO_SEED=true): reload a fresh synthetic inbox when the current one was
+ * loaded more than `maxAgeHours` ago, or never finished loading. Otherwise every chat would pass
+ * Meta's 24-hour reply window within a day and the public demo would look broken.
+ * Age is measured from when the demo was loaded, not from the latest message, so visitors
+ * replying can't keep a stale demo alive. The marker is written only after seeding finishes,
+ * so an interrupted seed is redone on the next start. Never use on real data (index.js refuses).
  */
-export async function refreshDemoIfStale(maxAgeHours = 6) {
+export async function refreshDemoIfStale(maxAgeHours = 6, now = Date.now()) {
   const db = getDb();
-  const { rows } = await db.query(`SELECT max(last_message_at) AS latest, count(*)::int AS n FROM conversations`);
-  const latest = rows[0].latest ? new Date(rows[0].latest).getTime() : 0;
-  if (rows[0].n > 0 && Date.now() - latest < maxAgeHours * 3600_000) return null;
-  if (rows[0].n > 0) {
-    await db.exec(`TRUNCATE conversation_notes, status_events, messages, conversations, contacts, saved_replies, sessions
-                   RESTART IDENTITY CASCADE`);
-  }
-  return seedDemoInbox();
+  const marker = (await db.query(`SELECT value FROM app_meta WHERE key = $1`, [SEEDED_KEY])).rows[0];
+  const seededAt = marker ? Date.parse(marker.value) : NaN;
+  if (Number.isFinite(seededAt) && now - seededAt < maxAgeHours * 3600_000) return null;
+
+  await db.query(`DELETE FROM app_meta WHERE key = $1`, [SEEDED_KEY]);
+  await db.exec(`TRUNCATE conversation_notes, status_events, messages, conversations, contacts, saved_replies, sessions
+                 RESTART IDENTITY CASCADE`);
+  const counts = await seedDemoInbox();
+  await db.query(
+    `INSERT INTO app_meta (key, value) VALUES ($1, $2)
+     ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
+    [SEEDED_KEY, new Date(now).toISOString()],
+  );
+  return counts;
 }

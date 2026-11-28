@@ -98,6 +98,8 @@ const MAX_PER_NAME = 5;   // failed attempts for one name from one address
 const MAX_PER_IP = 20;    // failed attempts from one address, any name
 const failures = new Map();
 
+const MAX_TRACKED = 10_000; // memory bound for the failure map
+
 function tooMany(key, max, now) {
   const f = failures.get(key);
   return f && now - f.first < WINDOW_MS && f.count >= max;
@@ -107,6 +109,18 @@ function recordFailure(key, now) {
   if (!f || now - f.first >= WINDOW_MS) failures.set(key, { first: now, count: 1 });
   else f.count += 1;
 }
+function forgetOne(key) {
+  const f = failures.get(key);
+  if (!f) return;
+  f.count -= 1;
+  if (f.count <= 0) failures.delete(key);
+}
+/** Drop expired entries; if still too many (an attack), drop the oldest. */
+function pruneFailures(now) {
+  if (failures.size < 1000) return;
+  for (const [k, f] of failures) if (now - f.first >= WINDOW_MS) failures.delete(k);
+  while (failures.size > MAX_TRACKED) failures.delete(failures.keys().next().value);
+}
 export function resetLoginThrottle() {
   failures.clear();
 }
@@ -114,21 +128,30 @@ export function resetLoginThrottle() {
 const sha256 = (s) => crypto.createHash('sha256').update(s).digest('hex');
 
 export async function login(name, password, ip = '?', now = Date.now()) {
-  const nameKey = `${ip}|${String(name).trim().toLowerCase()}`;
+  // Only plausible names become map keys (a real name is at most 40 characters), so the
+  // failure map can't be filled with huge or endless random keys.
+  const cleanName = typeof name === 'string' ? name.trim() : '';
+  const validName = NAME_RE.test(cleanName);
+  const nameKey = `${ip}|${validName ? cleanName.toLowerCase() : '*invalid*'}`;
+  pruneFailures(now);
   if (tooMany(nameKey, MAX_PER_NAME, now) || tooMany(ip, MAX_PER_IP, now)) {
     throw new AuthError(429, 'Too many failed attempts. Try again in 15 minutes.');
   }
+  // Reserve this attempt before any await: parallel guesses each count immediately, so they
+  // can't all pass the check above before the first failure is recorded. Undone on success.
+  recordFailure(nameKey, now);
+  recordFailure(ip, now);
+
   const db = getDb();
-  const agent = typeof name === 'string'
-    ? (await db.query(`SELECT id, name, password_hash, active FROM agents WHERE lower(name) = lower($1)`, [name.trim()])).rows[0]
+  const agent = validName
+    ? (await db.query(`SELECT id, name, password_hash, active FROM agents WHERE lower(name) = lower($1)`, [cleanName])).rows[0]
     : undefined;
   const ok = await verifyPassword(typeof password === 'string' ? password : '', agent?.password_hash ?? DUMMY_HASH);
   if (!agent || !ok || !agent.active) {
-    recordFailure(nameKey, now);
-    recordFailure(ip, now);
     throw new AuthError(401, 'Wrong name or password');
   }
   failures.delete(nameKey);
+  forgetOne(ip);
 
   const token = crypto.randomBytes(32).toString('base64url');
   const expiresAt = new Date(now + config.sessionHours * 3600 * 1000);

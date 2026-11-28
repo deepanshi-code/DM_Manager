@@ -25,6 +25,18 @@ class AnonymizeTest(unittest.TestCase):
         for t in ["call me 9876543210", "+91 98765 43210 pe whatsapp", "my no is 098765-43210"]:
             self.check(t, ["98765", "43210"], "phone")
 
+    def test_phone_numbers_in_other_groupings(self):
+        for t in ["call me on 987 654 3210", "my number is 98765-432-10", "ph 98.765.43210"]:
+            out = self.check(t, ["987", "654", "3210", "432"], "phone")
+            self.assertNotRegex(out, r"[1-9]")
+
+    def test_upi_with_any_bank_handle(self):
+        self.check("pay to riya.sharma@axisbank", ["riya.sharma", "axisbank"], "upi")
+        self.check("gpay fakeperson@kotak", ["fakeperson"], "upi")
+        # an email stays an email, a social handle stays a handle
+        self.check("mail test.user@example.com", ["test.user"], "email")
+        self.check("ask @fake.handle_01", ["fake.handle_01"], "handle")
+
     def test_email_url_upi_handle(self):
         self.check("mail test.user@example.com", ["test.user", "example.com"], "email")
         self.check("see https://shop.example.in/p/123", ["shop.example"], "url")
@@ -43,6 +55,8 @@ class AnonymizeTest(unittest.TestCase):
         self.assertIn("name", found)
         _, _, review = anonymize("my name is testa, price?")
         self.assertTrue(review, "lowercase name intro should be flagged for review")
+        for t in ["i am testa from delhi", "this is testa", "TESTA FAKENAME here"]:
+            self.assertTrue(anonymize(t)[2], f"should be flagged for review: {t}")
 
     def test_address_is_flagged_not_silently_passed(self):
         _, _, review = anonymize("deliver to flat 12, sector 5 near the park")

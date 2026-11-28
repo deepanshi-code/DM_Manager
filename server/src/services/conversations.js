@@ -85,7 +85,8 @@ async function applyReply(q, conv, { at, agent, text }) {
         status = $2,
         needs_reply_since = $3,
         is_overdue = COALESCE($3 <= now() - make_interval(secs => $6), false),
-        first_response_at = COALESCE(first_response_at, $4),
+        -- only a reply to a waiting customer counts as the first response (not a business-started chat)
+        first_response_at = COALESCE(first_response_at, $8),
         last_message_preview = CASE WHEN last_message_at IS NULL OR $4 >= last_message_at
                                     THEN $5 ELSE last_message_preview END,
         last_message_at = GREATEST(last_message_at, $4),
@@ -94,7 +95,8 @@ async function applyReply(q, conv, { at, agent, text }) {
         remind_at = NULL,
         updated_at = now()
       WHERE id = $1`,
-    [conv.id, next, remaining, at.toISOString(), `You: ${text}`.slice(0, 140), config.slaSeconds, agent ?? null],
+    [conv.id, next, remaining, at.toISOString(), `You: ${text}`.slice(0, 140), config.slaSeconds, agent ?? null,
+      since && since <= at ? at.toISOString() : null],
   );
   return { next, responseSeconds };
 }
@@ -150,12 +152,35 @@ export async function ingestInbound({ igUserId, username, mid, text, timestamp }
     );
     if (inserted.rows.length === 0) return { duplicate: true, conversationId: conv.id };
 
+    // A webhook can arrive late (Meta retries a failed delivery). If we already replied after this
+    // message was sent, it is answered: store it, but don't reopen the chat or restart its timer.
+    const lastReply = (
+      await q.query(
+        `SELECT max(sent_at) AS at FROM messages
+          WHERE conversation_id = $1 AND direction = 'OUTBOUND' AND delivery_status = 'SENT'`,
+        [conv.id],
+      )
+    ).rows[0].at;
+    if (lastReply && new Date(ts) <= new Date(lastReply)) {
+      await q.query(
+        `UPDATE conversations SET
+            first_inbound_at = LEAST(first_inbound_at, $2),
+            last_customer_message_at = GREATEST(last_customer_message_at, $2),
+            updated_at = now()
+          WHERE id = $1`,
+        [conv.id, ts],
+      );
+      await refreshConversationIntent(q, conv.id);
+      return { duplicate: false, late: true, conversationId: conv.id, messageId: inserted.rows[0].id, status: conv.status };
+    }
+
     const next = statusAfterInbound(conv.status);
     await q.query(
       `UPDATE conversations SET
           status = $2,
-          needs_reply_since = COALESCE(needs_reply_since, $3),
-          first_inbound_at = COALESCE(first_inbound_at, $3),
+          -- LEAST ignores NULL: starts the timer, or moves it back if an older message arrives late
+          needs_reply_since = LEAST(needs_reply_since, $3),
+          first_inbound_at = LEAST(first_inbound_at, $3),
           last_customer_message_at = GREATEST(last_customer_message_at, $3),
           last_message_preview = CASE WHEN last_message_at IS NULL OR $3 >= last_message_at
                                       THEN $4 ELSE last_message_preview END,
@@ -243,6 +268,16 @@ export async function sendReply(conversationId, text, agent, { savedReplyId } = 
     const at = new Date();
     const applied = await applyReply(q, conv, { at, agent, text: body });
     const responseSeconds = echo ? echo.response_seconds : applied.responseSeconds;
+    if (echo) {
+      // The echo already logged this reply as made "in the Instagram app"; it was this agent.
+      await q.query(
+        `UPDATE status_events SET actor = $2, reason = 'reply_sent'
+          WHERE id = (SELECT id FROM status_events
+                       WHERE conversation_id = $1 AND reason = 'reply_in_instagram_app'
+                       ORDER BY created_at DESC, id DESC LIMIT 1)`,
+        [conversationId, agent ?? 'agent'],
+      );
+    }
     await q.query(
       `UPDATE messages SET delivery_status = 'SENT', platform_message_id = $2, sent_at = $4,
               response_seconds = $3
@@ -463,8 +498,11 @@ export async function backfillIntents() {
   return { messages: rows.length, conversations: touched.size };
 }
 
-const csvCell = (v) => {
-  const s = v == null ? '' : v instanceof Date ? v.toISOString() : String(v);
+// Spreadsheets run a cell that starts with = + - @ (or tab/CR) as a formula. Customer text is
+// untrusted, so such cells get a leading apostrophe (shown as text, not executed).
+export const csvCell = (v) => {
+  let s = v == null ? '' : v instanceof Date ? v.toISOString() : String(v);
+  if (typeof v === 'string' && /^[=+\-@\t\r]/.test(s)) s = `'${s}`;
   return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
 

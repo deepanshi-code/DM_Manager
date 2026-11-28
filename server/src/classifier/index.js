@@ -86,6 +86,9 @@ export function classify(text) {
   let best = 0;
   for (let k = 1; k < p.proba.length; k++) if (p.proba[k] > p.proba[best]) best = k;
   const confidence = p.proba[best];
+  // A matching complaint keyword always wins (same rule as policy_decide in ml/train.py):
+  // a missed complaint loses URGENT priority, the costliest mistake this classifier can make.
+  if (rule === 'complaint') return { intent: 'complaint', confidence, source: 'rules', lowConfidence: false };
   if (confidence >= model.threshold) {
     return { intent: p.classes[best], confidence, source: 'model', lowConfidence: false };
   }
