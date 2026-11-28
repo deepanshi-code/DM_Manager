@@ -8,9 +8,11 @@
 
 **Phase 3 goal.** Answer the same questions faster: saved replies suggested by message type, and alerts when chats go overdue.
 
-**Phase 4 goal. Connect to real Instagram: send replies through Meta's API, count replies typed in the Instagram app, show real usernames, and require agents to sign in.
+**Phase 4 goal.** Connect to real Instagram: send replies through Meta's API, count replies typed in the Instagram app, show real usernames, and require agents to sign in.
 
-> Testing and evaluation results (coverage, load test, security checks, what's not yet evaluated): [docs/EVALUATION.md](docs/EVALUATION.md).
+> **Live demo** (synthetic data, no login): https://dm-manager-pfwi.onrender.com (dashboard at `/app`). Code: https://github.com/deepanshi-code/DM_Manager.
+>
+> Testing and evaluation results (coverage, load test, security checks, independent code review, what's not yet evaluated): [docs/EVALUATION.md](docs/EVALUATION.md). In short: 90/90 server tests and 11/11 Python tests pass; coverage is 94.2% of lines (87.3% branches, 89.1% functions); the load test (5,498 webhook events) passes all 6 correctness checks, at 103–180 events/s across laptop runs (p95 latency 139 ms in the latest run, 227 ms in an earlier one); an independent pre-submission code review (6 reviewers, each finding checked by 3 skeptics) confirmed 26 defects, all fixed.
 >
 > Capstone: Phases 1–3 and the Phase 4 code are done. Going live still needs a Meta developer app and a test account: see [docs/INSTAGRAM_SETUP.md](docs/INSTAGRAM_SETUP.md). For presenting, see [docs/DEMO.md](docs/DEMO.md).
 
@@ -27,7 +29,8 @@ npm run dev:server               # API on http://localhost:4000
 npm run dev:client               # front page http://localhost:5173, dashboard /app  (second terminal)
 npm run simulate                 # replay synthetic DMs (third terminal)
 npm test                         # 90 automated server tests
-npm run loadtest                 # 5,000+ DMs: nothing lost or duplicated, timings
+npm run test:ml                  # 11 Python tests (anonymiser, agreement tools)
+npm run loadtest                 # 5,498 webhook events (4,672 unique DMs): nothing lost or duplicated, timings
 npm run demo:reset               # fresh, realistic demo inbox (server stopped)
 ```
 
@@ -61,8 +64,10 @@ To use a real PostgreSQL server instead, set `DATABASE_URL` in `server/.env`. Th
 
 `render.yaml` sets everything up: one web service that runs the API and serves the built
 dashboard, plus a free PostgreSQL database (the embedded one needs more than the free plan's
-512 MB of memory). The synthetic demo inbox is loaded at startup, and reloaded when it is
-older than 6 hours, so chats never sit past Meta's 24-hour reply window.
+512 MB of memory). The synthetic demo inbox is loaded at startup, and reloaded (checked
+hourly) when it was loaded more than 6 hours ago, so chats never sit past Meta's 24-hour reply
+window. `DEMO_SEED` wipes the database, so the server refuses to start with it when `AUTH=on`
+or `SENDER=instagram`.
 
 1. Sign in at https://render.com with GitHub.
 2. **New → Blueprint**, pick this repository, click **Apply**.
@@ -70,11 +75,13 @@ older than 6 hours, so chats never sit past Meta's 24-hour reply window.
 
 Free instances sleep after ~15 minutes without visitors; the first visit after that takes
 about a minute to wake up. Render's free databases have had a time limit (30 days), so check
-their current policy and recreate or upgrade the database when it expires. For real customers use
-`AUTH=on`, a hosted PostgreSQL (`DATABASE_URL`) and the Instagram setup guide.
+their current policy and recreate or upgrade the database when it expires. For real customers
+remove `DEMO_SEED` and use `AUTH=on`, a hosted PostgreSQL (`DATABASE_URL`) and the Instagram
+setup guide.
 
-To run the production build locally: `npm run build`, then
-`SERVE_CLIENT=true DEMO_SEED=true npm start` and open http://localhost:4000.
+To run the production build locally with the demo inbox: `npm run build`, then
+`SERVE_CLIENT=true DEMO_SEED=true AUTH=off npm start` and open http://localhost:4000
+(`AUTH=off` is needed because `server/.env.example` sets `AUTH=on`).
 
 ## Architecture
 
@@ -89,7 +96,7 @@ Instagram ──webhook──▶ Express API ──▶ PostgreSQL (PGlite in dev
 
 ```
 server/
-  src/schema.sql            tables: contacts, conversations, messages, status_events
+  src/schema.sql            tables: contacts, conversations, messages, status_events, agents, sessions, saved_replies, conversation_notes, app_meta
   src/stateMachine.js       lifecycle rules (pure functions, unit-tested)
   src/services/conversations.js   ingest, reply, status, assign, inbox queries, stats
   src/routes/webhook.js     Instagram webhook: verification, signature check, parsing
@@ -98,12 +105,18 @@ server/
   src/senders/              how replies are delivered (simulated, or Instagram)
   src/instagram/client.js   Meta API calls: send a DM, look up a username
   src/services/profiles.js  fills in usernames for new customers
+  src/services/savedReplies.js   saved replies (Phase 3)
+  src/services/workspace.js notes, reminders, presence, bulk actions, report CSV
+  src/classifier/           message-type model (model.json) and decision policy
+  src/demo.js               synthetic demo inbox (demo:reset, hosted demo refresh)
   src/auth.js               agent accounts (scrypt), sessions, login throttling
   scripts/agent.js          npm run agent -- add|reset|disable|enable|list
+  scripts/loadtest.js       npm run loadtest
   simulator/generate.js     builds SYNTHETIC DMs (seeded, labelled by intent)
   simulator/simulate.js     replays them as Instagram-shaped webhook events
   test/                     node:test suites (run against real Postgres via PGlite)
 client/src/                 React dashboard
+ml/                         Python training, evaluation, anonymiser and agreement tools (+ tests)
 ```
 
 ---
@@ -116,7 +129,7 @@ client/src/                 React dashboard
 
 3. **Inbox order: overdue first, then longest-waiting.** Instagram sorts newest first, which pushes old unanswered chats out of sight. Reversing that order is the main product idea.
 
-4. **Idempotent webhooks.** Meta retries webhook deliveries. `messages.platform_message_id` is `UNIQUE`, and inserts use `ON CONFLICT DO NOTHING`, so a retry never creates a duplicate. *Tested: 30 messages + 5 re-deliveries → 30 stored.*
+4. **Idempotent webhooks.** Meta retries webhook deliveries. `messages.platform_message_id` is `UNIQUE`, and inserts use `ON CONFLICT DO NOTHING`, so a retry never creates a duplicate. *Tested: a re-delivered webhook is stored once (server/test/flow.test.js, http.test.js), and the load test stored all 4,672 unique DMs from 5,498 events exactly once.*
 
 5. **No race when a new customer sends two messages at once.** `conversations.contact_id` is `UNIQUE`, and creation uses `INSERT … ON CONFLICT` followed by `SELECT … FOR UPDATE`.
 
@@ -132,7 +145,8 @@ client/src/                 React dashboard
 
 ```
 DM ─▶ classify(text) ─────────────▶ messages.intent (+ confidence, source)
-        │  model if confident            │
+        │  complaint keyword first       │
+        │  else model if confident       │
         │  else keyword rule             ▼
         │  else model guess, flagged   conversation topic + "customer is chasing" ─▶ priority
         ▼                                                                             URGENT / NORMAL / LOW
@@ -145,7 +159,9 @@ DM ─▶ classify(text) ─────────────▶ messages.int
 13. **Human corrections are stored next to the prediction, never over it.** Agents can fix any label from the message bubble. The correction wins immediately, model errors stay measurable (`/api/stats` → `labels`), and corrected rows export as real training data (`/api/labels.csv?corrected=1`).
 14. **Older messages are labelled at startup.** Messages stored before the classifier existed are classified once, so a Phase 1 database upgrades in place (the schema uses `ADD COLUMN IF NOT EXISTS`).
 
-**Evaluation (synthetic data, details and caveats in [ml/reports/phase2_evaluation.md](ml/reports/phase2_evaluation.md)):** the server's decision policy reaches 76% accuracy and 74% macro-F1 on held-out phrasings. However, complaint recall is only 22%, and the keyword rules it uses are leaked. Real, anonymised data is needed for a trustworthy number. See [ml/README.md](ml/README.md).
+15. **A complaint keyword always wins.** The pre-submission code review found that a low-confidence model guess could override a matching complaint keyword, so most complaints lost their URGENT priority. The policy now checks the complaint rule first, with the same rule in Node and in `ml/train.py`, so the report measures what the server runs.
+
+**Evaluation (synthetic data, details and caveats in [ml/reports/phase2_evaluation.md](ml/reports/phase2_evaluation.md)):** on held-out phrasings (380 test rows) the server's decision policy (complaint keyword → model if confident → rules → model guess) reaches 79.2% accuracy, 78.1% macro-F1 and 54.1% complaint recall; before the fix it was 76.1%, 73.9% and 21.6%. The keyword rules alone reach 76.6%, 79.0% and 54.1%. These numbers are optimistic: the keyword rules are leaked (written after seeing all templates) and the data is synthetic. Complaint recall is still only about half, so complaints remain the weakest class. Real, anonymised data is needed for a trustworthy number. See [ml/README.md](ml/README.md).
 
 ## Dashboard UX for high-volume inboxes
 
@@ -153,6 +169,7 @@ DM ─▶ classify(text) ─────────────▶ messages.int
 - **Keyboard:** `j`/`k` next/previous, `r` reply, `Ctrl+Enter` send, `e` resolve, `/` search, `Esc` back, `?` show all shortcuts.
 - **Undo** after resolving. Reopening restores the reply timer, the overdue flag and the "chasing" flag, so an accidental resolve can't make a customer disappear (this is covered by a test).
 - **Why is this chat on top?** Each row shows one waiting time (red when overdue) plus Overdue / Chasing / message-type tags. The status tag is hidden in action views, where every row needs a reply anyway.
+- **Shareable chat links.** The address bar follows the open chat, so `/app?c=<id>` opens that conversation directly (for example to hand a chat to a teammate).
 - **Unsent drafts are kept per conversation** while switching chats. A failed delivery has a "Try again" link that puts the text back in the reply box.
 - **Honest states:** a loading skeleton instead of a false "Inbox zero", and empty states that say what an empty view means.
 - **Phone layout:** the inbox list and the conversation show one at a time, with a back link, and the page never scrolls sideways. On tablets the less important stats are hidden.
@@ -203,7 +220,7 @@ What the code does now (setup steps are in [docs/INSTAGRAM_SETUP.md](docs/INSTAG
 | **Out-of-order webhooks** | A reply only answers customer messages sent *before* it. Later ones keep their timer. | Webhooks aren't guaranteed to arrive in order. |
 | **Usernames** | Looked up once per new customer after the webhook is answered. A failed lookup waits an hour before retrying. | Webhooks only carry a numeric id, and Meta wants a fast 200. |
 | **Login** | Accounts with scrypt-hashed passwords. Session = random token in an `HttpOnly`, `SameSite=Lax` cookie, and only its SHA-256 is stored. 5 failed attempts per name per address in 15 min → locked out. Changes must be JSON. | The server decides who acted (from the session), not the browser, so "sent by" and assignment can't be faked. |
-| **Safe startup** | `SENDER=instagram` refuses to start without `IG_APP_SECRET`, `IG_ACCESS_TOKEN` and `AUTH=on`. A port already in use stops startup with an error. | Fails loudly instead of running half-configured. |
+| **Safe startup** | `SENDER=instagram` refuses to start without `IG_APP_SECRET`, `IG_ACCESS_TOKEN` and `AUTH=on`. `DEMO_SEED` (which wipes the database) is refused with `AUTH=on` or `SENDER=instagram`. A port already in use stops startup with an error. | Fails loudly instead of running half-configured. |
 
 ## Known limitations
 - **Polling, not push.** Refreshing every 3 seconds is fine for a small team. Server-Sent Events or WebSockets would come later.
@@ -223,4 +240,5 @@ What the code does now (setup steps are in [docs/INSTAGRAM_SETUP.md](docs/INSTAG
 | 2b | Retrain and evaluate on real anonymised messages; try multilingual sentence embeddings (small transformer) |
 | 3 ✅ | Saved replies suggested by message type (usage and edits tracked), overdue/urgent alerts, demo reset |
 | 4 ✅ code | Instagram send API, echo handling, username lookup, agent login. Tested with fakes, not yet against Meta |
+| Review ✅ | Hosted demo on Render (free web service + free PostgreSQL); independent pre-submission code review: 26 confirmed defects fixed, including the complaint-priority policy bug |
 | 4b | Meta developer app + test account (live demo), App Review, pilot with one business, before/after measurement |

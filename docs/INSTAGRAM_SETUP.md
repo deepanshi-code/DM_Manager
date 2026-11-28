@@ -4,6 +4,11 @@ This guide takes you from the simulator to real DMs on a **test account you own*
 enough for development and a live capstone demo. Serving another business's account needs Meta's
 App Review (step 9).
 
+To see the dashboard without connecting Instagram, use the hosted demo with synthetic data
+(https://dm-manager-pfwi.onrender.com, dashboard at `/app`) or run it locally with the simulator.
+Before connecting a real account, check that the code works on your machine: `npm test` (90 server
+tests) and `npm run test:ml` (11 Python tests) should all pass.
+
 > **Check against Meta's docs.** Meta renames menus, permissions and API versions fairly often.
 > The names below are what this project was written against, from the "Instagram API with
 > Instagram Login" docs. Where a step says *(verify)*, confirm it on developers.facebook.com before
@@ -68,14 +73,16 @@ IG_VERIFY_TOKEN=pick-a-long-random-string
 IG_API_VERSION=v23.0           # set to the version shown in your app dashboard (verify)
 SLA_SECONDS=3600
 ```
-Create at least one agent account with the API server stopped, then start it:
+Do not set `DEMO_SEED` here: it deletes all conversations, and the server refuses to start when it is combined with `SENDER=instagram` or `AUTH=on`.
+
+Create at least one agent account with the API server stopped (the embedded database allows only one process at a time). The command prints a generated password once. Then start the server:
 ```bash
 npm run agent -- add Asha
 ```
 ```bash
 npm run dev:server
 ```
-The startup log should end with `sender: instagram` and `login: on`. If a setting is missing, the server says which one and doesn't start.
+The last two lines of the startup log should show `sender: instagram` and `login: on`. If a setting is missing, the server says which one and doesn't start.
 
 ## 7. Register the webhook
 In the Meta app's Instagram webhook settings:
@@ -90,7 +97,7 @@ Replies typed in the Instagram app reach us as **echo** events (`is_echo: true`)
 ## 8. Test it end to end
 | Do this | Expect |
 |---|---|
-| From the "customer" account, DM the test account | It appears in the dashboard within ~3 s, first with the numeric id and then the username |
+| From the "customer" account, DM the test account | It appears in the dashboard within ~3 s (the dashboard refreshes every 3 s), first with the numeric id and then the username. The address bar shows `/app?c=<id>`, a link that reopens that chat for a signed-in agent |
 | Reply from the dashboard | It arrives on the customer's phone, and the chat moves to *Waiting on customer* |
 | From the **Instagram app**, answer another chat | That chat leaves *To reply*, and the reply shows as "Instagram app" |
 | Send a DM, wait more than `SLA_SECONDS` | The chat turns *Overdue* |
@@ -101,11 +108,11 @@ If DMs don't arrive: check step 2 (message access), that both accounts are teste
 ## 9. Before serving a real business (not needed for the demo)
 - **App Review:** request advanced access for the messaging permission. Meta asks for a screencast of the app in use and a **privacy policy** URL, and may require business verification *(verify current requirements)*.
 - **Consent and data:** the business owns its customers' messages. Agree in writing on what is stored, for how long, and who can see it. Don't export customer text without anonymising it (`ml/anonymize.py`).
-- **Hosting:** run the API on a real server with a managed PostgreSQL (`DATABASE_URL`), HTTPS, and backups, not on a laptop tunnel.
+- **Hosting:** run the API on a real server with a managed PostgreSQL (`DATABASE_URL`), HTTPS, and backups, not on a laptop tunnel. The `render.yaml` blueprint is a starting point, but it is set up for the public demo (free web service and free PostgreSQL, `AUTH=off`, `SENDER=simulated`, `DEMO_SEED=true`, which reloads the synthetic inbox when it was loaded more than 6 hours ago). For real customers set `AUTH=on` and `SENDER=instagram`, add the `IG_*` values from step 6, and remove `DEMO_SEED`; the server will not start otherwise. Free plans are only suitable for a demo (the embedded PGlite database needed more than the free plan's 512 MB, which is why the demo uses PostgreSQL).
 - **Token refresh:** long-lived Instagram tokens expire (about 60 days when this was written) and can be refreshed before then *(verify)*:
   ```bash
   curl "https://graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token&access_token=$IG_ACCESS_TOKEN"
   ```
   This endpoint takes the token in the URL. Run it from your own terminal and don't share the output. Put the new token in `.env` and restart.
-- **24-hour window:** normal replies are only allowed within 24 h of the customer's last message, and the app blocks later ones. Meta has a separate "human agent" option for later replies that needs its own approval *(verify)*.
+- **24-hour window:** normal replies are only allowed within 24 h of the customer's last message, and the app blocks later ones (`REPLY_WINDOW_HOURS`, default 24). Meta has a separate "human agent" option for later replies that needs its own approval *(verify)*.
 - **Automated messages:** if the account uses Instagram's own automatic replies, their echoes also count as replies. Turn them off, or filter them out.
