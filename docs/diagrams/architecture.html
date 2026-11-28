@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DM Manager architecture</title>
+<style>
+  html, body { margin: 0; background: #ffffff; font-family: 'Segoe UI', Inter, Arial, sans-serif; }
+  svg { display: block; }
+  .box { fill: #ffffff; stroke: #c9ccd4; stroke-width: 1.5; rx: 12; }
+  .accent { fill: #eef3fe; stroke: #2563eb; }
+  .dark { fill: #14161c; stroke: #14161c; }
+  .t { font-size: 17px; font-weight: 600; fill: #16181d; }
+  .s { font-size: 13px; fill: #5d6270; }
+  .tw { font-size: 17px; font-weight: 600; fill: #ffffff; }
+  .sw { font-size: 13px; fill: #c8ccd6; }
+  .lbl { font-size: 12.5px; fill: #2563eb; font-weight: 600; }
+  .arrow { stroke: #2563eb; stroke-width: 2; fill: none; marker-end: url(#a); }
+  .arrow2 { stroke: #8a8f9c; stroke-width: 1.6; fill: none; marker-end: url(#g); stroke-dasharray: 5 4; }
+  .title { font-size: 22px; font-weight: 700; fill: #16181d; }
+</style>
+</head>
+<body>
+<svg width="1400" height="760" viewBox="0 0 1400 760" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2563eb"/></marker>
+    <marker id="g" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8a8f9c"/></marker>
+  </defs>
+  <text x="40" y="48" class="title">DM Manager: system architecture</text>
+
+  <!-- Customer / Instagram -->
+  <rect x="40" y="110" width="250" height="110" class="box"/>
+  <text x="60" y="148" class="t">Customers</text>
+  <text x="60" y="172" class="s">send Instagram DMs to the</text>
+  <text x="60" y="192" class="s">shop's business account</text>
+
+  <rect x="40" y="300" width="250" height="130" class="box accent"/>
+  <text x="60" y="338" class="t">Meta Instagram Platform</text>
+  <text x="60" y="362" class="s">Messaging webhooks (incoming</text>
+  <text x="60" y="382" class="s">DMs + echoes of replies)</text>
+  <text x="60" y="402" class="s">Send API (outgoing replies)</text>
+
+  <rect x="40" y="520" width="250" height="110" class="box"/>
+  <text x="60" y="558" class="t">Simulator</text>
+  <text x="60" y="582" class="s">synthetic DMs in the same</text>
+  <text x="60" y="602" class="s">webhook format (demo, tests)</text>
+
+  <path d="M165 220 L165 296" class="arrow"/>
+  <path d="M165 520 L165 434" class="arrow2"/>
+
+  <!-- API -->
+  <rect x="400" y="230" width="430" height="380" class="box"/>
+  <text x="420" y="266" class="t">Express API (Node.js)</text>
+  <rect x="420" y="285" width="390" height="56" rx="8" fill="#f3f4f6" stroke="#e4e5e9"/>
+  <text x="436" y="309" class="t" style="font-size:14.5px">Webhook endpoint</text>
+  <text x="436" y="329" class="s">HMAC signature check · store each message once</text>
+  <rect x="420" y="350" width="390" height="56" rx="8" fill="#f3f4f6" stroke="#e4e5e9"/>
+  <text x="436" y="374" class="t" style="font-size:14.5px">Conversation services</text>
+  <text x="436" y="394" class="s">lifecycle · reply timer · replies · reminders · notes</text>
+  <rect x="420" y="415" width="390" height="56" rx="8" fill="#eef3fe" stroke="#c7d6fb"/>
+  <text x="436" y="439" class="t" style="font-size:14.5px">Message-type classifier</text>
+  <text x="436" y="459" class="s">TF-IDF + logistic regression + keyword rules</text>
+  <rect x="420" y="480" width="190" height="56" rx="8" fill="#f3f4f6" stroke="#e4e5e9"/>
+  <text x="436" y="504" class="t" style="font-size:14.5px">SLA scheduler</text>
+  <text x="436" y="524" class="s">flags overdue chats</text>
+  <rect x="620" y="480" width="190" height="56" rx="8" fill="#f3f4f6" stroke="#e4e5e9"/>
+  <text x="636" y="504" class="t" style="font-size:14.5px">Auth</text>
+  <text x="636" y="524" class="s">scrypt · sessions</text>
+  <text x="420" y="580" class="s">REST API for the dashboard · CSV report</text>
+
+  <path d="M290 350 L396 330" class="arrow"/>
+  <text x="300" y="322" class="lbl">webhook (HTTPS)</text>
+  <path d="M396 395 L294 400" class="arrow"/>
+  <text x="300" y="420" class="lbl">Send API</text>
+
+  <!-- DB -->
+  <rect x="930" y="430" width="420" height="180" class="box"/>
+  <text x="950" y="468" class="t">PostgreSQL</text>
+  <text x="950" y="492" class="s">PGlite (embedded, development) or a hosted</text>
+  <text x="950" y="512" class="s">PostgreSQL server (production)</text>
+  <text x="950" y="544" class="s">contacts · conversations · messages ·</text>
+  <text x="950" y="564" class="s">status_events · saved_replies · notes · agents</text>
+  <path d="M830 500 L926 510" class="arrow"/>
+  <text x="842" y="492" class="lbl">SQL</text>
+
+  <!-- Dashboard -->
+  <rect x="930" y="110" width="420" height="230" class="box dark"/>
+  <text x="950" y="148" class="tw">React dashboard (browser)</text>
+  <text x="950" y="176" class="sw">Inbox ordered by overdue → priority → wait</text>
+  <text x="950" y="198" class="sw">Conversation view · saved replies (keys 1–3)</text>
+  <text x="950" y="220" class="sw">Details: customer, reminders, team notes</text>
+  <text x="950" y="242" class="sw">Overview: on-time ring, team stats, report</text>
+  <text x="950" y="264" class="sw">Keyboard shortcuts · alerts · bulk actions</text>
+  <text x="950" y="300" class="sw">Agents (support team) use it all day</text>
+  <path d="M930 260 L834 300" class="arrow"/>
+  <text x="846" y="262" class="lbl">REST / JSON</text>
+
+  <!-- ML -->
+  <rect x="400" y="660" width="430" height="70" class="box"/>
+  <text x="420" y="690" class="t" style="font-size:15px">Offline ML pipeline (Python, scikit-learn)</text>
+  <text x="420" y="712" class="s">train.py → model.json (loaded by the classifier)</text>
+  <path d="M615 660 L615 476" class="arrow2"/>
+</svg>
+</body>
+</html>

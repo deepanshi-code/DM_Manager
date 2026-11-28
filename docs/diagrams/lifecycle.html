@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Conversation lifecycle</title>
+<style>
+  html, body { margin: 0; background: #ffffff; font-family: 'Segoe UI', Inter, Arial, sans-serif; }
+  .st { fill: #ffffff; stroke: #2563eb; stroke-width: 2; }
+  .end { fill: #eef3fe; }
+  .t { font-size: 18px; font-weight: 700; fill: #16181d; }
+  .s { font-size: 13px; fill: #5d6270; }
+  .lbl { font-size: 13.5px; fill: #1d4fd7; font-weight: 600; }
+  .arrow { stroke: #2563eb; stroke-width: 2; fill: none; marker-end: url(#a); }
+  .title { font-size: 22px; font-weight: 700; fill: #16181d; }
+  .note { fill: #fdecee; stroke: #e7a3ab; }
+  .nt { font-size: 14px; fill: #8f1d2b; }
+</style>
+</head>
+<body>
+<svg width="1400" height="640" viewBox="0 0 1400 640" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="a" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2563eb"/></marker></defs>
+  <text x="40" y="48" class="title">Conversation lifecycle (status) and the separate reply timer</text>
+
+  <rect x="60" y="150" width="220" height="90" rx="16" class="st"/>
+  <text x="170" y="192" class="t" text-anchor="middle">NEW</text>
+  <text x="170" y="216" class="s" text-anchor="middle">first message, unread</text>
+
+  <rect x="430" y="150" width="220" height="90" rx="16" class="st"/>
+  <text x="540" y="192" class="t" text-anchor="middle">OPEN</text>
+  <text x="540" y="216" class="s" text-anchor="middle">an agent is on it</text>
+
+  <rect x="820" y="150" width="300" height="90" rx="16" class="st"/>
+  <text x="970" y="192" class="t" text-anchor="middle">WAITING_ON_CUSTOMER</text>
+  <text x="970" y="216" class="s" text-anchor="middle">we replied; ball in their court</text>
+
+  <rect x="520" y="380" width="260" height="90" rx="16" class="st end"/>
+  <text x="650" y="422" class="t" text-anchor="middle">RESOLVED</text>
+  <text x="650" y="446" class="s" text-anchor="middle">nothing left to do</text>
+
+  <path d="M280 195 L426 195" class="arrow"/>
+  <text x="300" y="183" class="lbl">agent opens</text>
+  <path d="M650 195 L816 195" class="arrow"/>
+  <text x="668" y="183" class="lbl">reply delivered</text>
+  <path d="M970 150 C 970 90, 540 90, 540 146" class="arrow"/>
+  <text x="680" y="88" class="lbl">customer writes again</text>
+  <path d="M170 240 C 170 330, 560 300, 600 376" class="arrow"/>
+  <text x="200" y="320" class="lbl">resolve (e.g. spam)</text>
+  <path d="M560 240 L620 376" class="arrow"/>
+  <text x="520" y="300" class="lbl">resolve</text>
+  <path d="M960 240 C 960 330, 760 330, 720 376" class="arrow"/>
+  <text x="870" y="320" class="lbl">resolve</text>
+  <path d="M560 470 C 470 560, 380 380, 500 244" class="arrow"/>
+  <text x="300" y="520" class="lbl">customer writes again / Undo → OPEN</text>
+
+  <rect x="900" y="380" width="460" height="200" rx="12" class="note"/>
+  <text x="920" y="412" class="nt" style="font-weight:700">Reply timer and "overdue" are NOT statuses</text>
+  <text x="920" y="440" class="nt">needs_reply_since = oldest customer message</text>
+  <text x="920" y="462" class="nt">sent after our last delivered reply.</text>
+  <text x="920" y="490" class="nt">Overdue = waiting longer than the reply target</text>
+  <text x="920" y="512" class="nt">(SLA). A NEW or OPEN chat can be overdue; the</text>
+  <text x="920" y="534" class="nt">inbox lists overdue chats first, so a waiting</text>
+  <text x="920" y="556" class="nt">customer can't be pushed out of sight.</text>
+</svg>
+</body>
+</html>
